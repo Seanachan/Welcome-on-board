@@ -37,14 +37,20 @@ After connect your phone to ESP32 via [Our Web App](https://voice-command-hub-co
 
 **Lights:**
 
-- "Turn on lights" → `LIGHTS_ON`
-- "Turn off lights" → `LIGHTS_OFF`
-- "Headlights on" → `HEADLIGHTS_ON`
+- "Show Red" → `RED`
+- "Show Blue" → `BLUE`
+- "Show Green" → `GREEN`
+
+**Music:**
+
+- "Play Music" → `PLAY_MUSIC`
+- "Stop Music" → `STOP_MUSIC`
+- "Volume Up" → `VOL_UP`
+- "Volume Down" → `VOL_DOWN`
 
 **Other:**
 
 - "Honk" → `HONK`
-- "Emergency stop" → `EMERGENCY_STOP`
 
 ## IU-IKE Light Stick Integration
 

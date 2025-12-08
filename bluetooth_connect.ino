@@ -3,9 +3,10 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
+#include <esp_system.h>
 
 #include "ike_client.h"
-
+#include "mp3_player.h"
 // --- WROVER SAFE PINS ---
 #define RX_PIN 26
 #define TX_PIN 27
@@ -21,7 +22,48 @@ BLEServer *pServer = NULL;
 BLECharacteristic *pTxCharacteristic;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
+bool mp3SyncPlaying = false;
+unsigned long mp3StartMillis = 0;
+int mp3BeatIndex = 0;
+const int NUM_BEATS = 12;
 
+const unsigned int beatTimesMs[NUM_BEATS] = {
+    827,   // cue 0
+    1675,  // cue 1
+    2523,  // cue 2
+    2951,  // cue 3
+    3378,  // cue 4
+    4226,  // cue 5
+    4226,  // cue 6
+    12846, // cue 23
+    16287, // cue 24
+    17136, // cue 25
+    17987, // cue 26
+    19266  // cue 27
+};
+typedef struct LED_Color
+{
+  int r;
+  int g;
+  int b;
+  int speed;
+  char mode; // 0=static,1=breathe,2=blink
+} LED_Color;
+LED_Color beatColors[NUM_BEATS] = {
+    {255, 0, 0, 3, 0},    // cue 0
+    {255, 140, 58, 3, 0}, // cue 1
+    {255, 255, 0, 3, 0},  // cue 2
+    {0, 255, 0, 3, 0},    // cue 3
+    {0, 255, 255, 3, 0},  // cue 4
+    {0, 0, 255, 3, 0},    // cue 5
+    {75, 0, 130, 1, 2},   // cue 6
+    {138, 43, 226, 1, 1}, // cue 23
+    {199, 21, 133, 1, 1}, // cue 24
+    {255, 20, 147, 1, 2}, // cue 25
+    {255, 69, 0, 1, 2},   // cue 26
+    {255, 140, 58, 1, 2}  // cue 27
+};
+const int BEAT_OFFSET_MS = 120;
 String usbLine;
 void handleUSBCommand(const String &line)
 {
@@ -35,14 +77,27 @@ void handleUSBCommand(const String &line)
 
   Serial.print("[USB CMD] ");
   Serial.println(cmd);
+  if (lower == "play")
+  {
+    // play 0001.mp3 (or 0002.mp3 if you needed)
+    mp3PlayTrack(1);
 
-  if (lower == "off")
+    // sync light stick effect as you like:
+    // ikeSetBreathe(255, 140, 58, 3); // speed=3
+
+    mp3SyncPlaying = true;
+    mp3StartMillis = millis();
+    mp3BeatIndex = 0;
+    Serial.println("[SYNC] Started beat-synced playback.");
+    return;
+  }
+  else if (lower == "off")
   {
     ikeSetStatic(0, 0, 0, 0x00);
     return;
   }
 
-  if (lower.startsWith("static"))
+  else if (lower.startsWith("static"))
   {
     int r, g, b, bright = 0xFF;
     int n = sscanf(cmd.c_str(), "%*s %d %d %d %d", &r, &g, &b, &bright);
@@ -55,7 +110,7 @@ void handleUSBCommand(const String &line)
     return;
   }
 
-  if (lower.startsWith("breathe"))
+  else if (lower.startsWith("breathe"))
   {
     int r, g, b, speed = 0x03;
     int n = sscanf(cmd.c_str(), "%*s %d %d %d %d", &r, &g, &b, &speed);
@@ -68,7 +123,7 @@ void handleUSBCommand(const String &line)
     return;
   }
 
-  if (lower.startsWith("blink"))
+  else if (lower.startsWith("blink"))
   {
     int r, g, b, speed = 0x03;
     int n = sscanf(cmd.c_str(), "%*s %d %d %d %d", &r, &g, &b, &speed);
@@ -103,7 +158,42 @@ void handleUSBCommand(const String &line)
 
   Serial.println("Unknown command.");
 }
+
 // --- 1. CALLBACKS FOR CONNECTION EVENTS ---
+void handleBeatCue(int cueIndex)
+{
+  // int R = random(220, 256);
+  // int G = random(80, 161);
+  // int B = random(0, 61);
+
+  // Serial.print("[CUE] ");
+  // Serial.print(cueIndex);
+  // Serial.print(" -> R,G,B = ");
+  // Serial.print(R);
+  // Serial.print(",");
+  // Serial.print(G);
+  // Serial.print(",");
+  // Serial.println(B);
+
+  LED_Color lc = beatColors[cueIndex];
+  // ikeSetStatic(lc.r, lc.g, lc.b, 0xFF);
+  // ikeSetBlink(R, G, B, 1); // or random mode if you like
+  switch (lc.mode)
+  {
+  case 0: // static
+    ikeSetStatic(lc.r, lc.g, lc.b, 0xFF);
+    break;
+  case 1: // breathe
+    ikeSetBreathe(lc.r, lc.g, lc.b, lc.speed);
+    break;
+  case 2: // blink
+    ikeSetBlink(lc.r, lc.g, lc.b, lc.speed);
+    break;
+  default:
+    break;
+  }
+}
+
 class MyServerCallbacks : public BLEServerCallbacks
 {
   void onConnect(BLEServer *pServer)
@@ -189,6 +279,11 @@ void setup()
 {
   Serial.begin(9600);
 
+  uint32_t seed = esp_random();
+  randomSeed(seed);
+
+  mp3Init(); // Initialize MP3 player
+
   // UART to PIC
   SerialPIC.begin(BAUDRATE, SERIAL_8N1, RX_PIN, TX_PIN);
 
@@ -237,6 +332,24 @@ void loop()
       usbLine += c; // build up the line
     }
   }
+
+  if (mp3SyncPlaying && mp3BeatIndex < NUM_BEATS)
+  {
+    unsigned long elapsed = millis() - mp3StartMillis;
+    uint16_t target = beatTimesMs[mp3BeatIndex] + BEAT_OFFSET_MS;
+
+    if (elapsed >= target)
+    {
+      handleBeatCue(mp3BeatIndex); // will be called 3 times total
+      mp3BeatIndex++;
+      if (mp3BeatIndex >= NUM_BEATS)
+      {
+        mp3SyncPlaying = false;
+        ikeSetStatic(120, 120, 120, 0xFF);
+      }
+    }
+  }
+
   // Maintain I-KE-V3 connection & handle scan/reconnect
   ikeLoop();
 
