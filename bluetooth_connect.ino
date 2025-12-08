@@ -66,6 +66,20 @@ LED_Color beatColors[NUM_BEATS] = {
     {255, 69, 0, 1, 2},   // cue 26
     {255, 140, 58, 1, 2}  // cue 27
 };
+enum VoiceAction
+{
+  VOICE_NONE = 0,
+  VOICE_LIGHT_RED,
+  VOICE_LIGHT_BLUE,
+  VOICE_LIGHT_GREEN,
+  VOICE_PLAY_MUSIC,
+  VOICE_STOP_MUSIC,
+  VOICE_VOL_UP,
+  VOICE_VOL_DOWN
+};
+
+volatile VoiceAction g_pendingVoiceAction = VOICE_NONE;
+
 void handleUSBCommand(const String &line)
 {
   String cmd = line;
@@ -194,48 +208,49 @@ bool handleVoiceCommand(const String &cmdRaw)
   // --------- MUSIC (handled on ESP32) ---------
   if (cmd == "PLAY_MUSIC")
   {
-    mp3PlayTrack(1);
+    g_pendingVoiceAction = VOICE_PLAY_MUSIC;
     return true;
   }
+
   else if (cmd == "STOP_MUSIC")
   {
-    mp3Stop();
+    g_pendingVoiceAction = VOICE_STOP_MUSIC;
     return true;
   }
+
   else if (cmd == "VOL_UP")
   {
-    volume = min(volume + 5, 25); // increase volume, max 25
-    mp3SetVolume(volume);
+    g_pendingVoiceAction = VOICE_VOL_UP;
     return true;
   }
+
   else if (cmd == "VOL_DOWN")
   {
-    volume = max(volume - 5, 0); // decrease volume, min 0
-    mp3SetVolume(volume);
+    g_pendingVoiceAction = VOICE_VOL_DOWN;
     return true;
   }
+
   // --------- LIGHTS (handled on ESP32, via I-KE) ---------
+
   else if (cmd == "RED")
   {
-    ikeSetStatic(255, 0, 0, 0xFF);
+    g_pendingVoiceAction = VOICE_LIGHT_RED;
     return true;
   }
+
   else if (cmd == "BLUE")
   {
-    ikeSetStatic(0, 0, 255, 0xFF);
+    g_pendingVoiceAction = VOICE_LIGHT_BLUE;
     return true;
   }
+
   else if (cmd == "GREEN")
   {
-    ikeSetStatic(0, 255, 0, 0xFF);
+    g_pendingVoiceAction = VOICE_LIGHT_GREEN;
     return true;
   }
-  // --------- OTHER COMMANDS (movement / steering / gears / honk) ---------
-  // FORWARD, REVERSE, PARK, TURN_LEFT, TURN_RIGHT, STRAIGHT,
-  // HIGH_SPEED, LOW_SPEED, HONK...
-  //
-  // These are not handled here – they should go to PIC.
-  // So we return false to indicate "not handled locally".
+
+  // movement / steering / gears / HONK → let PIC handle it
   return false;
 }
 
@@ -252,10 +267,15 @@ class MyServerCallbacks : public BLEServerCallbacks
     Serial.println("Sent 'CONNECTED' notification to Web App.");
   };
 
-  void onDisconnect(BLEServer *pServer)
+  void onDisconnect(BLEServer *pServer) override
   {
     deviceConnected = false;
-    Serial.println("Device disconnected. Starting advertising...");
+    oldDeviceConnected = false;
+    Serial.println("Device disconnected. Restarting advertising...");
+
+    // Immediately restart advertising so phone/web can reconnect
+    pServer->getAdvertising()->start();
+    Serial.println("Advertising started again.");
   }
 };
 
@@ -364,7 +384,49 @@ void loop()
       }
     }
   }
+  // --- Process pending voice actions (run in main loop, not in BLE callback) ---
+  if (g_pendingVoiceAction != VOICE_NONE)
+  {
+    VoiceAction action = g_pendingVoiceAction;
+    g_pendingVoiceAction = VOICE_NONE; // clear first, in case action takes time
 
+    Serial.print("[VOICE EXEC] action = ");
+    Serial.println((int)action);
+
+    switch (action)
+    {
+    case VOICE_PLAY_MUSIC:
+      mp3PlayTrack(1); // or whichever track you want
+      break;
+
+    case VOICE_STOP_MUSIC:
+      mp3Stop();
+      break;
+
+    case VOICE_VOL_UP:
+      mp3SetVolume(25); // adjust according to your global volume logic
+      break;
+
+    case VOICE_VOL_DOWN:
+      mp3SetVolume(10);
+      break;
+
+    case VOICE_LIGHT_RED:
+      ikeSetStatic(255, 0, 0, 0xFF);
+      break;
+
+    case VOICE_LIGHT_BLUE:
+      ikeSetStatic(0, 0, 255, 0xFF);
+      break;
+
+    case VOICE_LIGHT_GREEN:
+      ikeSetStatic(0, 255, 0, 0xFF);
+      break;
+
+    default:
+      break;
+    }
+  }
   // Maintain I-KE-V3 connection & handle scan/reconnect
   ikeLoop();
 
@@ -387,12 +449,6 @@ void loop()
   }
 
   // --- CONNECTION MANAGEMENT ---
-  if (!deviceConnected && oldDeviceConnected)
-  {
-    delay(500);
-    pServer->startAdvertising();
-    oldDeviceConnected = deviceConnected;
-  }
   if (deviceConnected && !oldDeviceConnected)
   {
     oldDeviceConnected = deviceConnected;
