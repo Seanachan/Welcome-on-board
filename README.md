@@ -21,8 +21,8 @@ After connect your phone to ESP32 via [Our Web App](https://voice-command-hub-co
 **Movement:**
 
 - "Go forward" → `FORWARD`
-- "Go back" → `REVERSE`
-- "Stop" → `STOP`
+- "Back Up" → `REVERSE`
+- "Parking" → `PARK`
 
 **Steering:**
 
@@ -32,16 +32,8 @@ After connect your phone to ESP32 via [Our Web App](https://voice-command-hub-co
 
 **Gears:**
 
-- "First gear" → `GEAR_ONE`
-- "Second gear" → `GEAR_TWO`
-- "Third gear" → `GEAR_THREE`
-- "Neutral" → `GEAR_NEUTRAL`
-
-**Speed:**
-
-- "Speed up" → `ACCELERATE`
-- "Slow down" → `DECELERATE`
-- "Set speed to 50" → `SPEED:50`
+- "High Speed" → `HIGH_SPEED`
+- "Low Speed" → `LOW_SPEED`
 
 **Lights:**
 
@@ -51,7 +43,7 @@ After connect your phone to ESP32 via [Our Web App](https://voice-command-hub-co
 
 **Other:**
 
-- "Honk" → `HORN`
+- "Honk" → `HONK`
 - "Emergency stop" → `EMERGENCY_STOP`
 
 ## IU-IKE Light Stick Integration
@@ -59,6 +51,9 @@ After connect your phone to ESP32 via [Our Web App](https://voice-command-hub-co
 > We integrates light stick which can be bought by fans to improve their concert experiences.
 > Through the official app, we managed to do reverse engineering and know basic data and functions of the light stick.
 > e.g. color, blinking, breathing, blinking speed, breathing speed.
-> Simple api is offered in this project to interact with the light stick with ESP32. A simple python version is also provided.
+> Simple APIs are offered to interact with the light stick with ESP32. A simple python version is also provided.
 
-Test connection with light stick using `python3 light_stick.py`.
+Test connection with light stick can be done with:
+
+1. Run `python3 light_stick.py` in terminal.
+2. Run `bluetooth_connect.ino` via arduino IDE, and input commands in Serial Monitor.
