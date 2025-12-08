@@ -368,22 +368,6 @@ void loop()
     }
   }
 
-  if (mp3SyncPlaying && mp3BeatIndex < NUM_BEATS)
-  {
-    unsigned long elapsed = millis() - mp3StartMillis;
-    uint16_t target = beatTimesMs[mp3BeatIndex] + BEAT_OFFSET_MS;
-
-    if (elapsed >= target)
-    {
-      handleBeatCue(mp3BeatIndex); // will be called 3 times total
-      mp3BeatIndex++;
-      if (mp3BeatIndex >= NUM_BEATS)
-      {
-        mp3SyncPlaying = false;
-        ikeSetStatic(120, 120, 120, 0xFF);
-      }
-    }
-  }
   // --- Process pending voice actions (run in main loop, not in BLE callback) ---
   if (g_pendingVoiceAction != VOICE_NONE)
   {
@@ -397,6 +381,10 @@ void loop()
     {
     case VOICE_PLAY_MUSIC:
       mp3PlayTrack(1); // or whichever track you want
+      mp3SyncPlaying = true;
+      mp3StartMillis = millis();
+      mp3BeatIndex = 0;
+      Serial.println("[SYNC] Started beat-synced playback.");
       break;
 
     case VOICE_STOP_MUSIC:
@@ -455,5 +443,21 @@ void loop()
     Serial.println("Device Connected to Web App!");
   }
 
+  if (mp3SyncPlaying && mp3BeatIndex < NUM_BEATS)
+  {
+    unsigned long elapsed = millis() - mp3StartMillis;
+    uint16_t target = beatTimesMs[mp3BeatIndex] + BEAT_OFFSET_MS;
+
+    if (elapsed >= target)
+    {
+      handleBeatCue(mp3BeatIndex); // will be called 3 times total
+      mp3BeatIndex++;
+      if (mp3BeatIndex >= NUM_BEATS)
+      {
+        mp3SyncPlaying = false;
+        ikeSetStatic(120, 120, 120, 0xFF);
+      }
+    }
+  }
   delay(1);
 }
