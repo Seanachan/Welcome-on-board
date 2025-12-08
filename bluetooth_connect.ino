@@ -16,6 +16,14 @@
 #define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID_TX "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 #define CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
+typedef struct LED_Color
+{
+  int r;
+  int g;
+  int b;
+  int speed;
+  char mode; // 0=static,1=breathe,2=blink
+} LED_Color;
 
 HardwareSerial SerialPIC(2);
 BLEServer *pServer = NULL;
@@ -25,8 +33,10 @@ bool oldDeviceConnected = false;
 bool mp3SyncPlaying = false;
 unsigned long mp3StartMillis = 0;
 int mp3BeatIndex = 0;
+unsigned char volume = 25; // default volume
+String usbLine;
 const int NUM_BEATS = 12;
-
+const int BEAT_OFFSET_MS = 120;
 const unsigned int beatTimesMs[NUM_BEATS] = {
     827,   // cue 0
     1675,  // cue 1
@@ -41,14 +51,7 @@ const unsigned int beatTimesMs[NUM_BEATS] = {
     17987, // cue 26
     19266  // cue 27
 };
-typedef struct LED_Color
-{
-  int r;
-  int g;
-  int b;
-  int speed;
-  char mode; // 0=static,1=breathe,2=blink
-} LED_Color;
+
 LED_Color beatColors[NUM_BEATS] = {
     {255, 0, 0, 3, 0},    // cue 0
     {255, 140, 58, 3, 0}, // cue 1
@@ -63,8 +66,6 @@ LED_Color beatColors[NUM_BEATS] = {
     {255, 69, 0, 1, 2},   // cue 26
     {255, 140, 58, 1, 2}  // cue 27
 };
-const int BEAT_OFFSET_MS = 120;
-String usbLine;
 void handleUSBCommand(const String &line)
 {
   String cmd = line;
@@ -162,22 +163,7 @@ void handleUSBCommand(const String &line)
 // --- 1. CALLBACKS FOR CONNECTION EVENTS ---
 void handleBeatCue(int cueIndex)
 {
-  // int R = random(220, 256);
-  // int G = random(80, 161);
-  // int B = random(0, 61);
-
-  // Serial.print("[CUE] ");
-  // Serial.print(cueIndex);
-  // Serial.print(" -> R,G,B = ");
-  // Serial.print(R);
-  // Serial.print(",");
-  // Serial.print(G);
-  // Serial.print(",");
-  // Serial.println(B);
-
   LED_Color lc = beatColors[cueIndex];
-  // ikeSetStatic(lc.r, lc.g, lc.b, 0xFF);
-  // ikeSetBlink(R, G, B, 1); // or random mode if you like
   switch (lc.mode)
   {
   case 0: // static
@@ -192,6 +178,65 @@ void handleBeatCue(int cueIndex)
   default:
     break;
   }
+}
+// Return true if the command was handled locally (ESP32), false if it should be forwarded to PIC.
+bool handleVoiceCommand(const String &cmdRaw)
+{
+  String cmd = cmdRaw;
+  cmd.trim();
+  cmd.toUpperCase();
+
+  if (cmd.length() == 0)
+    return false;
+
+  Serial.print("[VOICE CMD] ");
+  Serial.println(cmd);
+  // --------- MUSIC (handled on ESP32) ---------
+  if (cmd == "PLAY_MUSIC")
+  {
+    mp3PlayTrack(1);
+    return true;
+  }
+  else if (cmd == "STOP_MUSIC")
+  {
+    mp3Stop();
+    return true;
+  }
+  else if (cmd == "VOL_UP")
+  {
+    volume = min(volume + 5, 25); // increase volume, max 25
+    mp3SetVolume(volume);
+    return true;
+  }
+  else if (cmd == "VOL_DOWN")
+  {
+    volume = max(volume - 5, 0); // decrease volume, min 0
+    mp3SetVolume(volume);
+    return true;
+  }
+  // --------- LIGHTS (handled on ESP32, via I-KE) ---------
+  else if (cmd == "RED")
+  {
+    ikeSetStatic(255, 0, 0, 0xFF);
+    return true;
+  }
+  else if (cmd == "BLUE")
+  {
+    ikeSetStatic(0, 0, 255, 0xFF);
+    return true;
+  }
+  else if (cmd == "GREEN")
+  {
+    ikeSetStatic(0, 255, 0, 0xFF);
+    return true;
+  }
+  // --------- OTHER COMMANDS (movement / steering / gears / honk) ---------
+  // FORWARD, REVERSE, PARK, TURN_LEFT, TURN_RIGHT, STRAIGHT,
+  // HIGH_SPEED, LOW_SPEED, HONK...
+  //
+  // These are not handled here – they should go to PIC.
+  // So we return false to indicate "not handled locally".
+  return false;
 }
 
 class MyServerCallbacks : public BLEServerCallbacks
@@ -230,39 +275,9 @@ class MyCallbacks : public BLECharacteristicCallbacks
     for (size_t i = 0; i < len; ++i)
       cmd += (char)data[i];
 
-    // Simple command routing (optional – you can delete this if not needed yet)
-    if (cmd.startsWith("IKE "))
+    if (handleVoiceCommand(cmd))
     {
-      Serial.print("[CMD] ");
-      Serial.println(cmd);
-      // Very minimal parsing demo:
-      // IKE STATIC r g b brightness
-      if (cmd.startsWith("IKE STATIC"))
-      {
-        int r, g, b, br;
-        if (sscanf(cmd.c_str(), "IKE STATIC %d %d %d %d", &r, &g, &b, &br) == 4)
-        {
-          ikeSetStatic(r, g, b, br);
-        }
-      }
-      else if (cmd.startsWith("IKE BREATHE"))
-      {
-        int r, g, b, sp;
-        if (sscanf(cmd.c_str(), "IKE BREATHE %d %d %d %d", &r, &g, &b, &sp) == 4)
-        {
-          ikeSetBreathe(r, g, b, sp);
-        }
-      }
-      else if (cmd.startsWith("IKE BLINK"))
-      {
-        int r, g, b, sp;
-        if (sscanf(cmd.c_str(), "IKE BLINK %d %d %d %d", &r, &g, &b, &sp) == 4)
-        {
-          ikeSetBlink(r, g, b, sp);
-        }
-      }
-      // You can add "IKE HEX <40-hex>" => ikeSendHexPacket(...)
-      return; // Already handled, don't forward to PIC
+      return; // already handled locally
     }
 
     // Default behavior: forward everything to PIC

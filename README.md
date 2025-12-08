@@ -37,9 +37,9 @@ After connect your phone to ESP32 via [Our Web App](https://voice-command-hub-co
 
 **Lights:**
 
-- "Show Red" → `RED`
-- "Show Blue" → `BLUE`
-- "Show Green" → `GREEN`
+- "Light stick turns Red" → `RED`
+- "Light stick turns Blue" → `BLUE`
+- "Light stick turns Green" → `GREEN`
 
 **Music:**
 
