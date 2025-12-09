@@ -20,6 +20,9 @@ CMakeUserPresets.json
 
 .vscode
 *.code-workspace
-/welcom_on_board.X/build/*
-/welcom_on_board.X/nbproject/*
+*/build/*
+*/nbproject/*
 Makefile
+/welcom_on_board.X/dist/
+/welcom_onboard.X/build/
+/welcom_onboard.X/dist/
