@@ -19,3 +19,7 @@ CMakeUserPresets.json
 #cmake-build-*
 
 .vscode
+*.code-workspace
+/welcom_on_board.X/build/*
+/welcom_on_board.X/nbproject/*
+Makefile
