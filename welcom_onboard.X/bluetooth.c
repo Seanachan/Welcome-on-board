@@ -151,28 +151,6 @@ void Initialize(void)
 {
     // Configure oscillator
     OSCCONbits.IRCF = 0b110; // 4 MHz
-    // // Configure ADC
-    // TRISAbits.RA0 = 1;        // Set RA0 as input port
-    // ADCON1bits.PCFG = 0b1110; // AN0 as analog input
-    // ADCON0bits.CHS = 0b0000;  // Select AN0 channel
-    // ADCON1bits.VCFG0 = 0;     // Vref+ = Vdd
-    // ADCON1bits.VCFG1 = 0;     // Vref- = Vss
-    // ADCON2bits.ADCS = 0b000;  // ADC clock Fosc/2
-    // ADCON2bits.ACQT = 0b001;  // 2Tad acquisition time
-    // ADCON0bits.ADON = 1;      // Enable ADC
-    // ADCON2bits.ADFM = 1;      // Right justified
-
-    // // Configure servo (PWM)
-    // T2CONbits.TMR2ON = 0b1;     // Timer2 on
-    // T2CONbits.T2CKPS = 0b11;    // Prescaler 16
-    // CCP1CONbits.CCP1M = 0b1100; // PWM mode
-    // PR2 = 0x9b;                 // Set PWM period
-
-    // TRISCbits.TRISC2 = 0;
-
-    // // Configure CCP2 for LED analog on RC1
-    // CCP2CONbits.CCP2M = 0b1100; // PWM mode
-    // TRISCbits.TRISC1 = 0;       // RC1 as output (LED)
 
     // Configure I/O ports
     TRISA &= 0xC1; // Set RA1-RA5 as outputs for LED
@@ -192,16 +170,6 @@ void Initialize(void)
     INTCONbits.GIEH = 1;   // enable high priority interrupt
     INTCONbits.GIEL = 1;   // disable low priority interrupt
 
-    // Configure UART
-    /*
-           TODObasic
-           Serial Setting
-        1.   Setting Baud rate
-        2.   choose sync/async mode
-        3.   enable Serial port (configures RX/DT and TX/CK pins as serial port pins)
-        3.5  enable Tx, Rx Interrupt(optional)
-        4.   Enable Tx & RX
-    */
     TRISCbits.TRISC6 = 1; // RC6(TX) : Transmiter set 1 (output)
     TRISCbits.TRISC7 = 1; // RC7(RX) : Receiver set 1   (input)
 
@@ -222,11 +190,7 @@ void Initialize(void)
     IPR1bits.TXIP = 0;  // Interrupt Priority bit
     PIE1bits.RCIE = 1;  // Wanna use Interrupt (Receive)
     IPR1bits.RCIP = 0;  // Interrupt Priority bit
-    /* Transmitter (output)
-     TSR   : Current Data
-     TXREG : Next Data/
-     TXSTAbits.TRMT will set when TSR is empty
-    */
+
     /* Reiceiver (input)
      RSR   : Current Data
      RCREG : Correct Data (have been processed) : read data by reading the RCREG Register
@@ -259,56 +223,6 @@ void set_LED_analog(int value)
     CCP2CONbits.DC2B = (value & 0b11);
 }
 
-int current_servo_angle = 0;
-int get_servo_angle()
-{
-    // double duty_cycle = ((CCPR1L << 2) + CCP1CONbits.DC1B) * 4;
-    // return (int)((duty_cycle - 500) / (2400 - 500) * 180 - 90);
-    return current_servo_angle;
-}
-
-int set_servo_angle(int angle)
-{
-    int current = (CCPR1L << 2) + CCP1CONbits.DC1B;
-    int target = (int)((500 + (double)(angle + 90) / 180 * (2400 - 500)) / 8 / 4) * 8; // angle to pwn
-    btn_interr = false;
-    while (current != target)
-    {
-        if (btn_interr)
-            return -1;
-        if (current < target)
-            current++;
-        else
-            current--;
-
-        CCPR1L = (current >> 2);
-        CCP1CONbits.DC1B = (current & 0b11);
-        __delay_ms(1);
-    }
-    current_servo_angle = angle;
-    return 0;
-}
-
-int VR_value_to_servo_angle(int value, int min_deg, int max_deg)
-{
-    int vr = value;
-    if (vr < 0)
-        vr = 0;
-    else if (vr > VR_MAX)
-        vr = VR_MAX; // VR_MAX = 1023
-
-    long span = (long)(max_deg - min_deg);          // total angle range
-    long angle = (span * vr + VR_MAX / 2) / VR_MAX; // scaled, with rounding
-
-    return (int)(min_deg + angle);
-}
-
-int VR_value_to_LED_analog(int value)
-{
-    return value;
-}
-
-void variable_register_changed(int value);
 void button_pressed();
 
 void __interrupt(high_priority) H_ISR()
@@ -352,16 +266,6 @@ void button_pressed()
      */
 }
 
-void variable_register_changed(int value)
-{ // value: 0 ~ 1023
-  // Do sth when the variable register changes
-    /* Example:
-     * set_servo_angle(VR_value_to_servo_angle(value));
-     * set_LED_analog(VR_value_to_LED_analog(value));
-     * printf("%d\n", value); // print the variable register value on uart terminal
-     */
-}
-
 void keyboard_input(char *str)
 {
     printf("BT CMD: %s\n", str);
@@ -384,39 +288,13 @@ void keyboard_input(char *str)
     else if (strcmp(str, "PLAY_MUSIC") == 0)
     {
         printf("Play music\n");
-        // if ESP32 is removed, music must be controlled by DFPlayer here
-        // send command via PIC TX if DFPlayer connected through UART
-    }
-    else if (strcmp(str, "0") == 0)
-    {
-        set_LED(0xFF);
-        __delay_ms(500);
-        set_LED(0x00);
     }
     else
     {
         printf("Unknown CMD: %s\n", str);
     }
 }
-// void readUART()
-// {
-//     // Step 1: ALWAYS clear overrun if exists
-//     if (RCSTAbits.OERR)
-//     {
-//         RCSTAbits.CREN = 0;
-//         RCSTAbits.CREN = 1;
-//         printf("OERR reset\r\n");
-//     }
 
-//     // Step 2: Read ALL bytes in FIFO
-//     while (RCIF)
-//     {
-//         unsigned char c = RCREG;
-
-//         char vis = (c >= 32 && c < 127) ? c : '.';
-//         printf("RX: %c (0x%02X)\r\n", vis, c);
-//     }
-// }
 void main()
 {
     Initialize();
