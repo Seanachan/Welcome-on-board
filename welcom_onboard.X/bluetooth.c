@@ -60,10 +60,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <xc.h>
+
 #define _XTAL_FREQ 4000000
 #define STR_MAX 100
 #define VR_MAX ((1 << 10) - 1)
-// #define delay(t) __delay_ms(t * 1000);
 
 char buffer[STR_MAX];
 int buffer_size = 0;
@@ -74,6 +74,45 @@ unsigned char mode = 1;
 // ----- State machine for 3-LED pattern -----
 void set_LED(int value);
 
+// --- DFPlayer Functions ---
+void UART_WriteByte(unsigned char b)
+{
+    while (!TXSTAbits.TRMT)
+        ; // 等待移位暫存器空
+    TXREG = b;
+}
+
+void DF_SendCommand(unsigned char cmd, unsigned int param)
+{
+    unsigned char buf[6] = {
+        0xFF, 0x06, cmd, 0x00,
+        (unsigned char)(param >> 8),
+        (unsigned char)(param & 0xFF)};
+
+    unsigned int sum = 0;
+    for (int i = 0; i < 6; i++)
+        sum += buf[i];
+    unsigned int checksum = 0xFFFF - sum + 1;
+
+    UART_WriteByte(0x7E); // start
+    for (int i = 0; i < 6; i++)
+        UART_WriteByte(buf[i]);
+    UART_WriteByte((unsigned char)(checksum >> 8));
+    UART_WriteByte((unsigned char)(checksum & 0xFF));
+    UART_WriteByte(0xEF); // end
+
+    __delay_ms(50);
+}
+
+void DF_Init(void)
+{
+    DF_SendCommand(0x06, 25); // volume = 25
+}
+
+void DF_PlayTrack1(void)
+{
+    DF_SendCommand(0x03, 1); // 播放 0001.mp3
+}
 // ---------------- Uart --------------------
 
 void putch(char data)
@@ -162,13 +201,13 @@ void Initialize(void)
     // Configure interrupts
     INTCONbits.INT0IF = 0; // Clear INT0 flag
     INTCONbits.INT0IE = 1; // Enable INT0 interrupt
-    PIE1bits.ADIE = 1;     // Enable ADC interrupt
-    PIR1bits.ADIF = 0;     // Clear ADC flag
-    INTCONbits.PEIE = 1;   // Enable peripheral interrupt
-    INTCONbits.GIE = 1;    // Enable global interrupt
-    RCONbits.IPEN = 1;     // enable Interrupt Priority mode
-    INTCONbits.GIEH = 1;   // enable high priority interrupt
-    INTCONbits.GIEL = 1;   // disable low priority interrupt
+    // PIE1bits.ADIE = 1;     // Enable ADC interrupt
+    // PIR1bits.ADIF = 0;     // Clear ADC flag
+    INTCONbits.PEIE = 1; // Enable peripheral interrupt
+    INTCONbits.GIE = 1;  // Enable global interrupt
+    RCONbits.IPEN = 1;   // enable Interrupt Priority mode
+    INTCONbits.GIEH = 1; // enable high priority interrupt
+    INTCONbits.GIEL = 1; // disable low priority interrupt
 
     TRISCbits.TRISC6 = 1; // RC6(TX) : Transmiter set 1 (output)
     TRISCbits.TRISC7 = 1; // RC7(RX) : Receiver set 1   (input)
@@ -195,9 +234,11 @@ void Initialize(void)
      RSR   : Current Data
      RCREG : Correct Data (have been processed) : read data by reading the RCREG Register
     */
-
+    ADCON1 = 0x0F; // Set all pins to Digital Mode
+    LATBbits.LATB4 = 1;
+    TRISBbits.TRISB4 = 0; // Make RB4 Output
     // Start ADC conversion
-    ADCON0bits.GO = 1;
+    // ADCON0bits.GO = 1;
 }
 
 // ---------------- OOP --------------------
@@ -223,25 +264,8 @@ void set_LED_analog(int value)
     CCP2CONbits.DC2B = (value & 0b11);
 }
 
-void button_pressed();
-
 void __interrupt(high_priority) H_ISR()
 {
-    if (PIR1bits.ADIF)
-    { // Handle variable register interrupt
-        int value = (ADRESH << 8) + ADRESL;
-        variable_register_changed(value);
-        PIR1bits.ADIF = 0;
-        __delay_ms(5);
-    }
-
-    if (INTCONbits.INT0IF)
-    { // Handle button interrupt
-        button_pressed();
-        __delay_ms(50); // bouncing problem
-        btn_interr = true;
-        INTCONbits.INT0IF = 0;
-    }
 }
 
 int delay(double sec)
@@ -257,14 +281,6 @@ int delay(double sec)
 }
 
 // --------------- TODO ------------------
-
-void button_pressed()
-{
-    // Do sth when the button is pressed
-    /* Example:
-     * set_LED(get_LED() + 1);
-     */
-}
 
 void keyboard_input(char *str)
 {
@@ -288,6 +304,7 @@ void keyboard_input(char *str)
     else if (strcmp(str, "PLAY_MUSIC") == 0)
     {
         printf("Play music\n");
+        DF_PlayTrack1(); // Play track 1
     }
     else
     {
@@ -298,9 +315,8 @@ void keyboard_input(char *str)
 void main()
 {
     Initialize();
-    __delay_ms(5000);
+    DF_Init();
     printf("PIC ready\r\n");
-
     char str[STR_MAX];
 
     while (1)

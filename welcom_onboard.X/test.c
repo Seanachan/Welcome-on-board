@@ -1,3 +1,4 @@
+// CONFIG 同你原本那一份就好，略...
 // CONFIG1H
 #pragma config OSC = INTIO67 // Oscillator Selection bits (HS oscillator)
 #pragma config FCMEN = OFF   // Fail-Safe Clock Monitor Enable bit (Fail-Safe Clock Monitor disabled)
@@ -52,132 +53,81 @@
 
 // CONFIG7H
 #pragma config EBTRB = OFF // Boot Block Table Read Protection bit (Boot block (000000-0007FFh) not protected from table reads executed in other blocks)
-
+#define _XTAL_FREQ 4000000
 #include <xc.h>
 #include <stdio.h>
 
-#define _XTAL_FREQ 4000000
+// ==== DFPlayer: 用 RC6 硬體 UART 送命令 ====
 
-// 最簡單版 putch：printf 會用到
-void putch(char c)
+void UART_Init_9600(void)
 {
-    while (!TXSTAbits.TRMT)
-        ; // 等待 TX shift register 空
-    TXREG = c;
-}
+    OSCCONbits.IRCF = 0b110; // 4 MHz
+    ADCON1 = 0x0F;           // 全部腳位改成 digital
 
-void UART_Init(void)
-{
-    // RC6 = TX, RC7 = RX 給 EUSART 用
-    TRISCbits.TRISC6 = 1; // 讓周邊接管 TX
-    TRISCbits.TRISC7 = 1; // RX input
+    TRISCbits.TRISC6 = 1; // TX pin
+    TRISCbits.TRISC7 = 1; // RX pin (不用也沒關係)
 
     TXSTAbits.SYNC = 0;    // 非同步
-    BAUDCONbits.BRG16 = 0; // 8-bit Baud
-    TXSTAbits.BRGH = 0;    // 高速模式
+    BAUDCONbits.BRG16 = 0; // 8-bit BRG
+    TXSTAbits.BRGH = 1;    // high speed
+    SPBRG = 25;            // 4MHz, 9600 baud
 
-    // 9600 @ 4MHz: SPBRG ≈ 25
-    SPBRG = 51;
-    SPBRGH = 0;
-
-    RCSTAbits.SPEN = 1; // 啟用串列埠 (RC6/RC7)
-    TXSTAbits.TXEN = 1; // 開啟傳送
-    RCSTAbits.CREN = 1; // 開啟接收（雖然這個測試沒用到）
+    RCSTAbits.SPEN = 1; // 開 UART
+    TXSTAbits.TXEN = 1; // 允許傳送
+    RCSTAbits.CREN = 1; // 允許接收
 }
 
-void OSC_Init(void)
+void UART_WriteByte(unsigned char b)
 {
-    // 4MHz 內部振盪
-    OSCCONbits.IRCF = 0b110;
+    while (!TXSTAbits.TRMT)
+        ; // 等待移位暫存器空
+    TXREG = b;
 }
 
-void USART_char(char byte)
+void DF_SendCommand(unsigned char cmd, unsigned int param)
 {
-    TXREG = byte;
-    while (!TXIF)
-        ;
-    while (!TRMT)
-        ;
-}
-// End of function//
+    unsigned char buf[6] = {
+        0xFF, 0x06, cmd, 0x00,
+        (unsigned char)(param >> 8),
+        (unsigned char)(param & 0xFF)};
 
-// Function to Load buffer with string//
-void USART_string(char *string)
+    unsigned int sum = 0;
+    for (int i = 0; i < 6; i++)
+        sum += buf[i];
+    unsigned int checksum = 0xFFFF - sum + 1;
+
+    UART_WriteByte(0x7E); // start
+    for (int i = 0; i < 6; i++)
+        UART_WriteByte(buf[i]);
+    UART_WriteByte((unsigned char)(checksum >> 8));
+    UART_WriteByte((unsigned char)(checksum & 0xFF));
+    UART_WriteByte(0xEF); // end
+
+    __delay_ms(50);
+}
+
+void DF_Init(void)
 {
-    while (*string)
-        USART_char(*string++);
+    DF_SendCommand(0x06, 25); // volume = 25
 }
-// End of function//
 
-// Function to send data from RX. buffer//
-void send_data()
+void DF_PlayTrack1(void)
 {
-    TXREG = 13;
-    __delay_ms(500);
+    DF_SendCommand(0x03, 1); // 播放 0001.mp3
 }
-// End of function//
-
-// Function to get a char from buffer of Bluetooth//
-char USART_get_char(void)
-{
-    if (OERR) // check for over run error
-    {
-        CREN = 0;
-        CREN = 1; // Reset CREN
-    }
-
-    if (RCIF == 1) // if the user has sent a char return the char (ASCII value)
-    {
-        while (!RCIF)
-            ;
-        return RCREG;
-    }
-    else // if user has sent no message return 0
-        return 0;
-}
-// End of function/
 
 void main(void)
 {
-    // Scope variable declarations//
-    int get_value;
-    // End of variable declaration//
+    UART_Init_9600();
 
-    // I/O Declarations//
-    TRISA = 0;
-    // End of I/O declaration//
+    __delay_ms(1000); // 等 DFPlayer 上電穩定
+    DF_Init();
 
-    UART_Init(); // lets get our bluetooth ready for action
-    OSC_Init();  // Initialize oscillator
+    __delay_ms(500);
+    DF_PlayTrack1(); // 上電就播
 
-    // Show some introductory message once on power up//
-    USART_string("Bluetooth iS Ready");
-    send_data();
-    USART_string("Press 1 to turn ON LED");
-    send_data();
-    USART_string("Press 0 to turn OFF LED");
-    send_data();
-    // End of message//
-
-    while (1) // The infinite lop
+    while (1)
     {
-
-        get_value = USART_get_char(); // Read the char. received via BT
-
-        // If we receive a '0'//
-        if (get_value == '0')
-        {
-            LATAbits.LATA1 = 0;
-            USART_string("LED turned OFF");
-            send_data();
-        }
-
-        // If we receive a '1'//
-        if (get_value == '1')
-        {
-            LATAbits.LATA1 = 1;
-            USART_string("LED turned ON");
-            send_data();
-        }
+        // 什麼都不要做，等歌播完
     }
 }
