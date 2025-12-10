@@ -89,3 +89,7 @@ Once your phone is paired with the HC-05 module via the [Voice Command Hub App](
 
 > We have integrated the official **IU-IKE Light Stick** to enhance the visual experience.
 > By reverse-engineering the official Bluetooth protocol, we successfully identified the data structures required to control the device's functions, including color selection, blinking frequency, and breathing speed.
+
+## App Interface
+
+<img src='App_Interface.jpg' height=1140 width=540>
