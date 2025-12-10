@@ -257,25 +257,9 @@ void Initialize(void)
 
 // ---------------- OOP --------------------
 
-int get_LED()
-{
-    return (LATA >> 1);
-}
-
 void set_LED(int value)
 {
     LATA = (value << 1);
-}
-
-void set_LED_separately(int a, int b, int c, int d, int e)
-{
-    LATA = (a << 5) + (b << 4) + (c << 3) + (d << 2) + (e << 1);
-}
-
-void set_LED_analog(int value)
-{
-    CCPR2L = (value >> 2);
-    CCP2CONbits.DC2B = (value & 0b11);
 }
 
 void __interrupt(high_priority) H_ISR()
@@ -300,7 +284,7 @@ void keyboard_input(char *str)
 {
     for (int i = 0; i < strlen(str); i++)
         str[i] = toupper(str[i]);
-    printf("BT CMD: %s\n", str);
+    // printf("BT CMD: %s\n", str);
 
     if (strcmp(str, "FORWARD") == 0)
     {
@@ -333,12 +317,12 @@ void keyboard_input(char *str)
     }
     else if (strcmp(str, "PLAY_MUSIC") == 0)
     {
-        printf("Play music\n");
+        // printf("Play music\n");
         DF_PlayTrack1(); // Play track 1
     }
     else if (strcmp(str, "STOP_MUSIC") == 0)
     {
-        printf("Stop music\n");
+        // printf("Stop music\n");
         DF_Stop(); // Stop music
     }
     else if (strcmp(str, "VOL_UP") == 0)
@@ -351,7 +335,7 @@ void keyboard_input(char *str)
     }
     else
     {
-        printf("Unknown CMD: %s\n", str);
+        // printf("Unknown CMD: %s\n", str);
     }
 }
 
@@ -359,12 +343,14 @@ void main()
 {
     Initialize();
     DF_Init();
-    printf("PIC ready\r\n");
+    // printf("PIC ready\r\n");
     char str[STR_MAX];
-DF_PlayTrack1();
+    
+    DF_PlayTrack1();
+    
     while (1)
     {
-         if (GetString(str))
+        if (GetString(str))
             keyboard_input(str);
     }
 }
