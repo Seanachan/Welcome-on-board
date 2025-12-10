@@ -71,6 +71,7 @@ bool btn_interr = false;
 
 // add mode variable
 unsigned char mode = 1;
+int volume = 20; // initial volume
 // ----- State machine for 3-LED pattern -----
 void set_LED(int value);
 
@@ -106,12 +107,25 @@ void DF_SendCommand(unsigned char cmd, unsigned int param)
 
 void DF_Init(void)
 {
-    DF_SendCommand(0x06, 25); // volume = 25
+    DF_SendCommand(0x06, volume); // volume = 20
 }
 
 void DF_PlayTrack1(void)
 {
     DF_SendCommand(0x03, 1); // 播放 0001.mp3
+}
+void DF_Stop(void)
+{
+    DF_SendCommand(0x16, 0); // 停止播放
+}
+void DF_Volume(int vol_change)
+{
+    if (volume + vol_change < 0)
+        volume = 0;
+    if (volume > 30)
+        volume = 30;
+    volume = volume + vol_change;
+    DF_SendCommand(0x06, volume); // set volume
 }
 // ---------------- Uart --------------------
 
@@ -284,6 +298,8 @@ int delay(double sec)
 
 void keyboard_input(char *str)
 {
+    for (int i = 0; i < strlen(str); i++)
+        str[i] = toupper(str[i]);
     printf("BT CMD: %s\n", str);
 
     if (strcmp(str, "FORWARD") == 0)
@@ -296,15 +312,42 @@ void keyboard_input(char *str)
         // move robot backward
         set_LED(0x00); // example
     }
+    else if (strcmp(str, "STRAIGHT") == 0)
+    {
+    }
     else if (strcmp(str, "TURN_LEFT") == 0)
     {
         // steering left
     }
-
+    else if (strcmp(str, "TURN_RIGHT") == 0)
+    {
+        // steering right
+    }
+    else if (strcmp(str, "HIGH_SPEED") == 0)
+    {
+        // steering left
+    }
+    else if (strcmp(str, "LOW_SPEED") == 0)
+    {
+        // steering left
+    }
     else if (strcmp(str, "PLAY_MUSIC") == 0)
     {
         printf("Play music\n");
         DF_PlayTrack1(); // Play track 1
+    }
+    else if (strcmp(str, "STOP_MUSIC") == 0)
+    {
+        printf("Stop music\n");
+        DF_Stop(); // Stop music
+    }
+    else if (strcmp(str, "VOL_UP") == 0)
+    {
+        DF_Volume(5);
+    }
+    else if (strcmp(str, "VOL_DOWN") == 0)
+    {
+        DF_Volume(-5);
     }
     else
     {
@@ -318,10 +361,10 @@ void main()
     DF_Init();
     printf("PIC ready\r\n");
     char str[STR_MAX];
-
+DF_PlayTrack1();
     while (1)
     {
-        if (GetString(str))
+         if (GetString(str))
             keyboard_input(str);
     }
 }
