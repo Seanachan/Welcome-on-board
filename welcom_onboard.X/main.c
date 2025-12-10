@@ -130,10 +130,6 @@ void MFRC522_Init(void);
 void MFRC522_DebugStatus(void);
 void MFRC522_WriteReg(unsigned char addr, unsigned char val);
 unsigned char MFRC522_ReadReg(unsigned char addr);
-// void DF_SelectTF(void);
-// void DF_SetVolume(unsigned char level);
-// void DF_PlayRootTrack(unsigned int trackNum);
-// void Send_DFPlayer_Command(unsigned char command, unsigned int parameter);
 
 // --- 1. UART ??? (???) ---
 void UART_Init(void)
@@ -244,7 +240,7 @@ void ClearBitMask(unsigned char reg, unsigned char mask)
 void MFRC522_Init(void)
 {
     MFRC522_WriteReg(MFRC522_REG_COMMAND, PCD_RESETPHASE);
-    __delay_ms(50);
+    // __delay_ms(50);
     MFRC522_WriteReg(MFRC522_REG_T_MODE, 0x8D);
     MFRC522_WriteReg(MFRC522_REG_T_PRESCALER, 0x3E);
     MFRC522_WriteReg(MFRC522_REG_T_RELOAD_H, 0x00);
@@ -439,7 +435,7 @@ void main(void)
     SPI_Init();
     MFRC522_Init();
     DF_Init();
-    __delay_ms(5000);
+    // __delay_ms(5000);
     unsigned char ver = MFRC522_ReadReg(0x37); // ?????
     // ==========================================
     // [???? 2]??????? (??????)
@@ -467,10 +463,12 @@ void main(void)
         char input_str[STR_MAX];
         // ?? REQALL (0x52) ???????? REQIDL (0x26) ??
         // 0x52 = ????????? (?????)
+        // printf(".");
         unsigned char tx_status = MFRC522_ReadReg(MFRC522_REG_TX_CONTROL);
         if ((tx_status & 0x03) == 0)
         {
-            // printf("[Warning] Antenna was reset! (Power Issue)\r\n");
+            //            printf("[Warning] Antenna was reset! (Power Issue)\r\n");
+            putch('.');
             //  ??????
             SetBitMask(MFRC522_REG_TX_CONTROL, 0x03);
         }
@@ -485,11 +483,10 @@ void main(void)
 
             if (status == MI_OK)
             {
-                // printf("UID: %02X %02X %02X %02X \r\n", str[0], str[1], str[2], str[3]);
+                printf("UID: %02X %02X %02X %02X \r\n", str[0], str[1], str[2], str[3]);
                 if (str[0] == 0xB3 && str[1] == 0x31 && str[2] == 0x4E && str[3] == 0x05)
                 {
-                    // printf("Student Card Detected! Playing Music...\r\n");
-                    //  play 0001.mp3 from root
+                    printf("Student Card Detected! Playing Music...\r\n");
                     DF_PlayTrack1();
                 }
                 else
@@ -510,7 +507,7 @@ void main(void)
                 MFRC522_DebugStatus();
                 MFRC522_Init();
             }
-            putch('.');
+            // putch('.');
         }
 
         if (GetString(input_str))
