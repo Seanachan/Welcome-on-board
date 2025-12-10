@@ -180,23 +180,23 @@ int GetString(char *str)
     }
 }
 
-void __interrupt(low_priority) Lo_ISR(void)
-{
-    if (RCIF)
-    {
-        if (RCSTAbits.OERR)
-        {
-            CREN = 0;
-            Nop();
-            CREN = 1;
-        }
-
-        MyusartRead();
-    }
-
-    // process other interrupt sources here, if required
-    return;
-}
+// void __interrupt(low_priority) Lo_ISR(void)
+//{
+//     if (RCIF)
+//     {
+//         if (RCSTAbits.OERR)
+//         {
+//             CREN = 0;
+//             Nop();
+//             CREN = 1;
+//         }
+//
+//         MyusartRead();
+//     }
+//
+//     // process other interrupt sources here, if required
+//     return;
+// }
 
 // ---------------- Settings --------------------
 
@@ -289,12 +289,10 @@ void keyboard_input(char *str)
     if (strcmp(str, "FORWARD") == 0)
     {
         // move robot forward
-        set_LED(0xFF); // example
     }
     else if (strcmp(str, "REVERSE") == 0)
     {
         // move robot backward
-        set_LED(0x00); // example
     }
     else if (strcmp(str, "STRAIGHT") == 0)
     {
@@ -337,20 +335,21 @@ void keyboard_input(char *str)
     {
         // printf("Unknown CMD: %s\n", str);
     }
+    __delay_ms(100);
 }
 
-void main()
-{
-    Initialize();
-    DF_Init();
-    // printf("PIC ready\r\n");
-    char str[STR_MAX];
-    
-    DF_PlayTrack1();
-    
-    while (1)
-    {
-        if (GetString(str))
-            keyboard_input(str);
-    }
-}
+// void main()
+//{
+//     Initialize();
+//     DF_Init();
+//     // printf("PIC ready\r\n");
+//     char str[STR_MAX];
+//
+//     DF_PlayTrack1();
+//
+//     while (1)
+//     {
+//         if (GetString(str))
+//             keyboard_input(str);
+//     }
+// }
