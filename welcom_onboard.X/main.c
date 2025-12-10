@@ -1,58 +1,71 @@
+// ==========================================
+//  PIC18F4520 CONFIGURATION BITS
+// ==========================================
+
 // CONFIG1H
-#pragma config OSC = INTIO67 // Oscillator Selection bits (HS oscillator)
-#pragma config FCMEN = OFF   // Fail-Safe Clock Monitor Enable bit (Fail-Safe Clock Monitor disabled)
-#pragma config IESO = ON     // Internal/External Oscillator Switchover bit (Oscillator Switchover mode disabled)
+#pragma config OSC = INTIO67 // Internal Oscillator, I/O on RA6/RA7
+#pragma config FCMEN = OFF   // Fail-Safe Clock Monitor Disabled
+#pragma config IESO = ON     // Oscillator Switchover Enabled
 
 // CONFIG2L
-#pragma config PWRT = OFF      // Power-up Timer Enable bit (PWRT disabled)
-#pragma config BOREN = SBORDIS // Brown-out Reset Enable bits (Brown-out Reset enabled in hardware only (SBOREN is disabled))
-#pragma config BORV = 3        // Brown Out Reset Voltage bits (Minimum setting)
+#pragma config PWRT = OFF      // Power-up Timer Disabled
+#pragma config BOREN = SBORDIS // Brown-out Reset Enabled in hardware only
+#pragma config BORV = 3        // Brown-out Voltage Minimum
 
 // CONFIG2H
-#pragma config WDT = OFF // Watchdog Timer Enable bit (WDT disabled (control is placed on the SWDTEN bit))
-#pragma config WDTPS = 1 // Watchdog Timer Postscale Select bits (1:1)
+#pragma config WDT = OFF // Watchdog Timer Disabled
+#pragma config WDTPS = 1 // Watchdog Postscaler 1:1
 
 // CONFIG3H
-#pragma config CCP2MX = PORTC // CCP2 MUX bit (CCP2 input/output is multiplexed with RC1)
-#pragma config PBADEN = ON    // PORTB A/D Enable bit (PORTB<4:0> pins are configured as analog input channels on Reset)
-#pragma config LPT1OSC = OFF  // Low-Power Timer1 Oscillator Enable bit (Timer1 configured for higher power operation)
-#pragma config MCLRE = ON     // MCLR Pin Enable bit (MCLR pin enabled; RE3 input pin disabled)
+#pragma config CCP2MX = PORTC // CCP2 input/output multiplexed with RC1
+#pragma config PBADEN = OFF   // IMPORTANT: PORTB<4:0> pins are DIGITAL on Reset
+#pragma config LPT1OSC = OFF  // Low-Power Timer1 Oscillator Disabled
+#pragma config MCLRE = ON     // MCLR Pin Enabled
 
 // CONFIG4L
-#pragma config STVREN = ON // Stack Full/Underflow Reset Enable bit (Stack full/underflow will cause Reset)
-#pragma config LVP = OFF   // Single-Supply ICSP Enable bit (Single-Supply ICSP enabled)
-#pragma config XINST = OFF // Extended Instruction Set Enable bit (Instruction set extension and Indexed Addressing mode disabled (Legacy mode))
+#pragma config STVREN = ON // Stack Full/Underflow Reset Enabled
+#pragma config LVP = OFF   // Single-Supply ICSP Disabled
+#pragma config XINST = OFF // Extended Instruction Set Disabled
 
-// CONFIG5L
-#pragma config CP0 = OFF // Code Protection bit (Block 0 (000800-001FFFh) not code-protected)
-#pragma config CP1 = OFF // Code Protection bit (Block 1 (002000-003FFFh) not code-protected)
-#pragma config CP2 = OFF // Code Protection bit (Block 2 (004000-005FFFh) not code-protected)
-#pragma config CP3 = OFF // Code Protection bit (Block 3 (006000-007FFFh) not code-protected)
-
-// CONFIG5H
-#pragma config CPB = OFF // Boot Block Code Protection bit (Boot block (000000-0007FFh) not code-protected)
-#pragma config CPD = OFF // Data EEPROM Code Protection bit (Data EEPROM not code-protected)
-
-// CONFIG6L
-#pragma config WRT0 = OFF // Write Protection bit (Block 0 (000800-001FFFh) not write-protected)
-#pragma config WRT1 = OFF // Write Protection bit (Block 1 (002000-003FFFh) not write-protected)
-#pragma config WRT2 = OFF // Write Protection bit (Block 2 (004000-005FFFh) not write-protected)
-#pragma config WRT3 = OFF // Write Protection bit (Block 3 (006000-007FFFh) not write-protected)
-
-// CONFIG6H
-#pragma config WRTC = OFF // Configuration Register Write Protection bit (Configuration registers (300000-3000FFh) not write-protected)
-#pragma config WRTB = OFF // Boot Block Write Protection bit (Boot block (000000-0007FFh) not write-protected)
-#pragma config WRTD = OFF // Data EEPROM Write Protection bit (Data EEPROM not write-protected)
-
-// CONFIG7L
-#pragma config EBTR0 = OFF // Table Read Protection bit (Block 0 (000800-001FFFh) not protected from table reads executed in other blocks)
-#pragma config EBTR1 = OFF // Table Read Protection bit (Block 1 (002000-003FFFh) not protected from table reads executed in other blocks)
-#pragma config EBTR2 = OFF // Table Read Protection bit (Block 2 (004000-005FFFh) not protected from table reads executed in other blocks)
-#pragma config EBTR3 = OFF // Table Read Protection bit (Block 3 (006000-007FFFh) not protected from table reads executed in other blocks)
-
-// CONFIG7H
+// CONFIG5L - CONFIG7H (Code Protection - All Off)
+#pragma config CP0 = OFF, CP1 = OFF, CP2 = OFF, CP3 = OFF
+#pragma config CPB = OFF, CPD = OFF
+#pragma config WRT0 = OFF, WRT1 = OFF, WRT2 = OFF, WRT3 = OFF
+#pragma config WRTC = OFF, WRTB = OFF, WRTD = OFF
+#pragma config EBTR0 = OFF, EBTR1 = OFF, EBTR2 = OFF, EBTR3 = OFF
 #pragma config EBTRB = OFF
-// --- RC522 register ---
+
+// ==========================================
+//  INCLUDES & FREQUENCY
+// ==========================================
+#include <xc.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdbool.h>
+
+#define _XTAL_FREQ 4000000 // 4 MHz Crystal/Oscillator
+
+// ==========================================
+//  PIN DEFINITIONS
+// ==========================================
+
+// --- RC522 RFID Pins ---
+#define MFRC522_CS_PIN LATAbits.LATA0 // Chip Select (SDA)
+#define MFRC522_CS_TRIS TRISAbits.TRISA0
+
+#define MFRC522_RST_PIN LATEbits.LATE0 // Reset (RST)
+#define MFRC522_RST_TRIS TRISEbits.TRISE0
+
+// --- DFPlayer Mini (MP3) Pins ---
+// Note: You defined LATB1 in your snippet.
+// Ensure your physical wire is on RB1.
+#define MP3_TX_PIN LATBbits.LATB1
+#define MP3_TX_TRIS TRISBbits.TRISB1
+
+// ==========================================
+//  RC522 REGISTER DEFINITIONS
+// ==========================================
 #define MFRC522_REG_COMMAND 0x01
 #define MFRC522_REG_COMM_IEN 0x02
 #define MFRC522_REG_DIV_IEN 0x03
@@ -74,7 +87,7 @@
 #define MFRC522_REG_T_RELOAD_L 0x2C
 #define MFRC522_REG_T_RELOAD_H 0x2D
 
-// --- RC522 command ---
+// --- RC522 Commands ---
 #define PCD_IDLE 0x00
 #define PCD_CALCCRC 0x03
 #define PCD_TRANSMIT 0x04
@@ -88,16 +101,6 @@
 #define MI_OK 0
 #define MI_NOTAGERR 1
 #define MI_ERR 2
-
-#define MFRC522_CS_PIN LATAbits.LATA0 // SDA(SS)
-#define MFRC522_CS_TRIS TRISAbits.TRISA0
-
-#define MFRC522_RST_PIN LATEbits.LATE0 // RST
-#define MFRC522_RST_TRIS TRISEbits.TRISE0
-
-// ?? MP3 ???? (? DFPlayer ? RX)
-#define MP3_TX_PIN LATBbits.LATB1
-#define MP3_TX_TRIS TRISBbits.TRISB1
 
 #include <ctype.h>
 // #include <pic18f4520.h>
@@ -118,10 +121,6 @@ static int buffer_size = 0;
 static bool btn_interr = false;
 static unsigned char mode = 1;
 static int volume = 20; // DFPlayer volume 0-30
-
-// Software UART on RB4 (DFPlayer fallback)
-#define SW_TX_PIN LATBbits.LATB4
-#define SW_TX_TRIS TRISBbits.TRISB4
 
 // --- ?????? ---
 void UART_Init(void);
@@ -432,10 +431,10 @@ void main(void)
     OSCCON = 0x60; // 4MHz
     ADCON1 = 0x0F;
     UART_Init();
+    DF_Init();
     SPI_Init();
     MFRC522_Init();
-    DF_Init();
-    // __delay_ms(5000);
+    __delay_ms(500);
     unsigned char ver = MFRC522_ReadReg(0x37); // ?????
     // ==========================================
     // [???? 2]??????? (??????)
@@ -468,16 +467,16 @@ void main(void)
         if ((tx_status & 0x03) == 0)
         {
             //            printf("[Warning] Antenna was reset! (Power Issue)\r\n");
-            putch('.');
+            // putch('.');
             //  ??????
             SetBitMask(MFRC522_REG_TX_CONTROL, 0x03);
         }
-        status = MFRC522_Request(0x26, str);
+        status = MFRC522_Request(0x52, str);
 
         if (status == MI_OK)
         {
             fail_count = 0;
-            // printf("Found Card! Reading UID...\r\n"); // ??? 1???????
+            printf("Found Card! Reading UID...\r\n"); // ??? 1???????
 
             status = MFRC522_Anticoll(str);
 
@@ -501,13 +500,13 @@ void main(void)
         }
         else
         {
-            fail_count++;
-            if ((fail_count % 200) == 0)
-            { // every 200 misses, dump debug and re-init RF
-                MFRC522_DebugStatus();
-                MFRC522_Init();
-            }
-            // putch('.');
+            //            fail_count++;
+            //            if ((fail_count % 800) == 0)
+            //            { // every 200 misses, dump debug and re-init RF
+            //                MFRC522_DebugStatus();
+            // MFRC522_Init();
+            //            }
+            // putch('e');
         }
 
         if (GetString(input_str))
