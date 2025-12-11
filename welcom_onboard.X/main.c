@@ -53,17 +53,6 @@
 #pragma config EBTRB = OFF // Boot Block Table Read Protection bit (Boot block (000000-0007FFh) not protected from table reads executed in other blocks)
 
 // ==========================================
-//  INCLUDES & FREQUENCY
-// ==========================================
-#include <xc.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdbool.h>
-
-#define _XTAL_FREQ 4000000 // 4 MHz Crystal/Oscillator
-
-// ==========================================
 //  PIN DEFINITIONS
 // ==========================================
 
@@ -73,12 +62,6 @@
 
 #define MFRC522_RST_PIN LATEbits.LATE0 // Reset (RST)
 #define MFRC522_RST_TRIS TRISEbits.TRISE0
-
-// --- DFPlayer Mini (MP3) Pins ---
-// Note: You defined LATB1 in your snippet.
-// Ensure your physical wire is on RB1.
-#define MP3_TX_PIN LATBbits.LATB1
-#define MP3_TX_TRIS TRISBbits.TRISB1
 
 // ==========================================
 //  RC522 REGISTER DEFINITIONS
@@ -119,24 +102,61 @@
 #define MI_NOTAGERR 1
 #define MI_ERR 2
 
+// Standard includes
 #include <ctype.h>
-// #include <pic18f4520.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <xc.h>
+
+// Self includes
 #include "bluetooth.h"
 #include "DFPlayer.h"
 #include "UART.h"
+#include "motor.h"
 
+// Definitions
 #define _XTAL_FREQ 4000000
-
 #define STR_MAX 100
 #define VR_MAX ((1 << 10) - 1)
 
-// Bluetooth/console RX state
+// Global Variables
 static int volume = 20; // DFPlayer volume 0-30
+static int speed = 0;   // Motor speed
+const int array[] = {0, 40, 50, 60};
 
+int state = -1;
+
+long long adc_sum = 0;
+int sum_cnt = 0;
+
+void __interrupt(high_priority) Hi_ISR(void)
+{
+
+    if (PIR1bits.ADIF)
+    {
+        long long value = (ADRESH << 8) | ADRESL;
+        // do sth
+        adc_sum += value;
+        sum_cnt++;
+        if (sum_cnt >= 20)
+        {
+            long long average_value = adc_sum / 20;
+            seg7_displayNumber(average_value);
+            __delay_ms(500);
+            adc_sum = 0;
+            sum_cnt = 0;
+        }
+
+        PIR1bits.ADIF = 0; // clear flag bit
+
+        // step5 & go back step3
+        __delay_ms(3); // delay at least 2tad (4M ver.)
+        ADCON0bits.GO = 1;
+    }
+
+    return;
+}
 void __interrupt(low_priority) Lo_ISR(void)
 {
     if (RCIF)
@@ -220,6 +240,7 @@ void main(void)
     Initialize_UART();
     DF_Init();
     SPI_Init();
+    CCP_Seg7_Initialize();
     MFRC522_Init();
     __delay_ms(500);
     unsigned char ver = MFRC522_ReadReg(0x37); // ?????
@@ -244,9 +265,17 @@ void main(void)
 
     while (1)
     {
+        // Handle Bluetooth Input
         char input_str[STR_MAX];
         if (GetString(input_str))
             keyboard_input(input_str);
+
+        // CCP
+        CCPR1L = speed;
+        CCP1CONbits.DC1B = 0;
+        CCPR2L = speed;
+        CCP2CONbits.DC2B = 0;
+
         // ?? REQALL (0x52) ???????? REQIDL (0x26) ??
         // 0x52 = ????????? (?????)
         // printf(".");
