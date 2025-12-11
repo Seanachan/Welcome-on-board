@@ -1,22 +1,55 @@
 # Welcome-on-board
 
-We're implementing a automatic car combining arduino toolkit and PIC XC8.
+We are implementing an autonomous smart car system using the **PIC XC8** compiler.
 
-Integrated with EPS32-WROVER, which serves as a bi-directional bridge between a smartphone (via Web Bluetooth/BLE) and the target **PIC18F4520** microcontroller (via UART).
+The system is integrated with an **HC-05 Bluetooth module**, serving as a bi-directional bridge between our custom Android application and the target **PIC18F4520** microcontroller (via UART).
 
-## Web App
+### Project Inspiration: _My Neighbor Totoro_
 
-1. **Start listening** - When you tap the mic button, it calls `recognition.start()` using `window.SpeechRecognition` or `window.webkitSpeechRecognition`
-2. **Browser handles everything** - The browser listens to your microphone and converts speech to text in real-time
-3. **Get the result** - When you stop speaking, the `onresult` event fires with the transcribed text
-4. **Send to LLM** - The text is sent to the AI to convert natural language (like "turn left") into a command (`TURN_LEFT`)
-5. **Send via Bluetooth** - The command is sent to your ESP32 over Bluetooth
+> _My Neighbor Totoro_ is a beloved Japanese animation deeply rooted in our hearts.
+>
+> Inspired by Totoro's warm-hearted nature, we designed this system to bring joy to its interactions. When passengers tap their card on the **RFID sensor**, the car plays the "On-Board Dance" theme song while the integrated light stick glows in synchronization. This feature aims to create a shared moment of cheer, reflecting our belief that technology should positively impact human connection and foster a brighter future.
+
+## Automated Car Components
+
+We utilize the following hardware components to ensure precise control and interactivity.
+
+### Microcontroller & Processing
+
+1.  **MCU:** Microchip PIC18F4520
+2.  **Programmer:** MPLAB PICkit 4
+3.  **Audio:** DFPlayer Mini (MP3 Player Module)
+
+### Sensors
+
+### Sensors & Input
+
+1.  **Identification:** RFID Sensor Module (RC522)
+2.  **Environment:** Ambient Light Sensor (ALS) Module
+3.  **Navigation:** Ultrasonic
+
+### Displays
+
+1. 7-segment Display
+2. OLED Display
+
+### Actuators & Power
+
+1.  **Drive:** L298N Motor Driver
+2.  **Motors:** DC Motors
+3.  **Power:** 6x AA Batteries
+
+## Mobile App Workflow
+
+1.  **Voice Activation** - Tapping the mic button initializes the device's native speech recognition engine.
+2.  **Real-Time Transcription** - The app captures audio input and converts speech to text instantaneously.
+3.  **Intent Resolution** - The transcribed text is processed to identify the user's intent.
+4.  **LLM Parsing** - The text is sent to gemini-2.0-flash to convert natural language (e.g., "Please turn left now") into a standardized protocol command (e.g., `TURN_LEFT`).
+5.  **Bluetooth Transmission** - The resolved command is transmitted via Bluetooth to the HC-05/ESP32 receiver.
 
 ## Voice Commands
 
-After connect your phone to ESP32 via [Our Web App](https://voice-command-hub-copy-c1d22b6b.base44.app/), speak to your phone to manipulate the car. Here are the commands that you can use:
-
-> Chrome and Edge are recommended to use.
+Once your phone is paired with the HC-05 module via the [Voice Command Hub App](https://github.com/Seanachan/Voice-Command-Hub.git), you can control the vehicle using natural speech. Below is the mapping of supported commands:
 
 **Movement:**
 
@@ -54,12 +87,9 @@ After connect your phone to ESP32 via [Our Web App](https://voice-command-hub-co
 
 ## IU-IKE Light Stick Integration
 
-> We integrates light stick which can be bought by fans to improve their concert experiences.
-> Through the official app, we managed to do reverse engineering and know basic data and functions of the light stick.
-> e.g. color, blinking, breathing, blinking speed, breathing speed.
-> Simple APIs are offered to interact with the light stick with ESP32. A simple python version is also provided.
+> We have integrated the official **IU-IKE Light Stick** to enhance the visual experience.
+> By reverse-engineering the official Bluetooth protocol, we successfully identified the data structures required to control the device's functions, including color selection, blinking frequency, and breathing speed.
 
-Test connection with light stick can be done with:
+## App Interface
 
-1. Run `python3 light_stick.py` in terminal.
-2. Run `bluetooth_connect.ino` via arduino IDE, and input commands in Serial Monitor.
+<img src='App_Interface.jpg' height=1140 width=540>
