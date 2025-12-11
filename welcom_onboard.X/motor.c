@@ -5,7 +5,26 @@
 #include "string.h"
 #include <xc.h>
 #include "seg7/seg7.h"
+void CCP_Seg7_Initialize(void)
+{
+    // general
+    ADCON1 = 0x0E; // set as digital -> reset flag bit DO FIRST!!
 
+    // LED
+    TRISD = 0; // 0:output 1:input
+    LATD = 0;  // value = 0 -> dark
+
+    // button (fixed high priority)
+    INTCONbits.INT0IF = 0; // flag bit
+    TRISBbits.RB0 = 1;     // RB0(INT0) : input
+    INTCONbits.INT0IE = 1; // Enable RB0
+
+    INTERRUPT_Initialize();
+    CCP_Initialize();
+    seg7_init();
+    seg7_setBrightness(7);
+    ADC_Initialize();
+}
 void CCP_Initialize()
 {
     TRISCbits.TRISC2 = 0;
@@ -21,14 +40,6 @@ void CCP_Initialize()
     LATC = 0;
 }
 
-void OSCILLATOR_Initialize(void)
-{
-    // default 1Mhz
-    //(1)
-    IRCF2 = 1;
-    IRCF1 = 1;
-    IRCF0 = 0;
-}
 void INTERRUPT_Initialize(void)
 {
     // Global
@@ -64,30 +75,6 @@ void ADC_Initialize(void)
     ADCON0bits.GO = 1; // Stop ADC conversion
 }
 
-void SYSTEM_Initialize(void)
-{
-    // general
-    ADCON1 = 0x0E; // set as digital -> reset flag bit DO FIRST!!
-
-    // LED
-    TRISD = 0; // 0:output 1:input
-    LATD = 0;  // value = 0 -> dark
-
-    // button (fixed high priority)
-    INTCONbits.INT0IF = 0; // flag bit
-    TRISBbits.RB0 = 1;     // RB0(INT0) : input
-    INTCONbits.INT0IE = 1; // Enable RB0
-
-    OSCILLATOR_Initialize();
-    INTERRUPT_Initialize();
-    CCP_Initialize();
-    seg7_init();
-    seg7_setBrightness(7);
-    ADC_Initialize();
-}
-
-int speed = 0;
-
 void forward()
 {
     LATDbits.LATD7 = 1;
@@ -96,9 +83,9 @@ void forward()
     LATDbits.LATD4 = 0;
 }
 
-void GOGO()
+void GOGO(int *speed)
 {
-    speed = 40;
+    *speed = 40;
     forward();
     seg7_display4(gear[3][0], gear[3][1], gear[3][2], gear[3][3]);
 }
@@ -112,25 +99,25 @@ void backward()
     seg7_display4(gear[1][0], gear[1][1], gear[1][2], gear[1][3]);
 }
 
-void highSpeed()
+void highSpeed(int *speed)
 {
-    speed = 60;
+    *speed = 60;
     seg7_display4(gear[2][0], gear[2][1], gear[2][2], gear[2][3]);
 }
 
-void lowSpeed()
+void lowSpeed(int *speed)
 {
-    speed = 40;
+    *speed = 40;
     seg7_display4(gear[3][0], gear[3][1], gear[3][2], gear[3][3]);
 }
 
-void park()
+void park(int *speed)
 {
-    speed = 0;
+    *speed = 0;
     seg7_display4(gear[0][0], gear[0][1], gear[0][2], gear[0][3]);
 }
 
-void turnLeft()
+void turnLeft(int *speed)
 { // speed = 40 , times = 1000 ;
     LATDbits.LATD7 = 1;
     LATDbits.LATD6 = 0;
@@ -144,10 +131,10 @@ void turnLeft()
         CCPR2L = 40;
         CCP2CONbits.DC2B = 0;
     }
-    forward();
+    forward(speed);
 }
 
-void turnRight()
+void turnRight(int *speed)
 {
     LATDbits.LATD7 = 0;
     LATDbits.LATD6 = 0;
@@ -161,57 +148,5 @@ void turnRight()
         CCPR2L = 40;
         CCP2CONbits.DC2B = 0;
     }
-    forward();
-}
-
-const int array[] = {0, 40, 50, 60};
-
-int state = -1;
-
-long long adc_sum = 0;
-int sum_cnt = 0;
-
-void __interrupt(high_priority) Hi_ISR(void)
-{
-
-    if (PIR1bits.ADIF)
-    {
-        long long value = (ADRESH << 8) | ADRESL;
-        // do sth
-        adc_sum += value;
-        sum_cnt++;
-        if (sum_cnt >= 20)
-        {
-            long long average_value = adc_sum / 20;
-            seg7_displayNumber(average_value);
-            __delay_ms(500);
-            adc_sum = 0;
-            sum_cnt = 0;
-        }
-
-        PIR1bits.ADIF = 0; // clear flag bit
-
-        // step5 & go back step3
-        __delay_ms(3); // delay at least 2tad (4M ver.)
-        ADCON0bits.GO = 1;
-    }
-
-    return;
-}
-
-void main(void)
-{
-    SYSTEM_Initialize();
-    seg7_display4(gear[0][0], gear[0][1], gear[0][2], gear[0][3]);
-    while (1)
-    {
-        CCPR1L = speed;
-        CCP1CONbits.DC1B = 0;
-        CCPR2L = speed;
-        CCP2CONbits.DC2B = 0;
-    }
-
-    while (1)
-        ;
-    return;
+    forward(speed);
 }
