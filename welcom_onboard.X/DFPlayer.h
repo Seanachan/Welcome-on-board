@@ -1,5 +1,6 @@
 #ifndef DFPLAYER_H
 #define DFPLAYER_H
+static int volume;
 void UART_WriteByte(unsigned char b);
 void DF_SendCommand(unsigned char cmd, unsigned int param);
 void DF_Init(void);

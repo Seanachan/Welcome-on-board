@@ -1,9 +1,10 @@
 #include <xc.h>
+#include <ctype.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include "UART.h"
 // ---------------- Uart --------------------
-
-static char buffer[STR_MAX];
-static int buffer_size = 0;
-
 void putch(char data)
 { // Output on Terminal
   if (data == '\n' || data == '\r')

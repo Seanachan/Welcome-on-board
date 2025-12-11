@@ -5,9 +5,6 @@
 #include <string.h>
 #include <xc.h>
 
-char buffer[STR_MAX];
-int buffer_size = 0;
-
 //  variables
 unsigned char mode = 1;
 int volume = 20; // initial volume
