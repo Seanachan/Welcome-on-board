@@ -5,6 +5,7 @@
 #include "string.h"
 #include <xc.h>
 #include "seg7/seg7.h"
+#include "motor.h"
 void CCP_Seg7_Initialize(void)
 {
     // general
@@ -83,9 +84,9 @@ void forward()
     LATDbits.LATD4 = 0;
 }
 
-void GOGO(int *speed)
+void GOGO()
 {
-    *speed = 40;
+    speed = 40;
     forward();
     seg7_display4(gear[3][0], gear[3][1], gear[3][2], gear[3][3]);
 }
@@ -99,25 +100,25 @@ void backward()
     seg7_display4(gear[1][0], gear[1][1], gear[1][2], gear[1][3]);
 }
 
-void highSpeed(int *speed)
+void highSpeed()
 {
-    *speed = 60;
+    speed = 60;
     seg7_display4(gear[2][0], gear[2][1], gear[2][2], gear[2][3]);
 }
 
-void lowSpeed(int *speed)
+void lowSpeed()
 {
-    *speed = 40;
+    speed = 40;
     seg7_display4(gear[3][0], gear[3][1], gear[3][2], gear[3][3]);
 }
 
-void park(int *speed)
+void park()
 {
-    *speed = 0;
+    speed = 0;
     seg7_display4(gear[0][0], gear[0][1], gear[0][2], gear[0][3]);
 }
 
-void turnLeft(int *speed)
+void turnLeft()
 { // speed = 40 , times = 1000 ;
     LATDbits.LATD7 = 1;
     LATDbits.LATD6 = 0;
@@ -131,10 +132,10 @@ void turnLeft(int *speed)
         CCPR2L = 40;
         CCP2CONbits.DC2B = 0;
     }
-    forward(speed);
+    forward();
 }
 
-void turnRight(int *speed)
+void turnRight()
 {
     LATDbits.LATD7 = 0;
     LATDbits.LATD6 = 0;
@@ -148,5 +149,5 @@ void turnRight(int *speed)
         CCPR2L = 40;
         CCP2CONbits.DC2B = 0;
     }
-    forward(speed);
+    forward();
 }

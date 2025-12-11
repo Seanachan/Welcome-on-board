@@ -1,5 +1,6 @@
 #include <xc.h>
-
+#include "DFPlayer.h"
+#define _XTAL_FREQ 4000000
 void UART_WriteByte(unsigned char b)
 {
   while (!TXSTAbits.TRMT)
@@ -42,12 +43,12 @@ void DF_Stop(void)
 {
   DF_SendCommand(0x16, 0); // Stop playing
 }
-void DF_Volume(int *volume, int vol_change)
+void DF_Volume(int vol_change)
 {
-  if (*volume + vol_change < 0)
-    *volume = 0;
-  if (*volume > 30)
-    *volume = 30;
-  *volume = *volume + vol_change;
-  DF_SendCommand(0x06, *volume); // set volume
+  if (volume + vol_change < 0)
+    volume = 0;
+  if (volume > 30)
+    volume = 30;
+  volume = volume + vol_change;
+  DF_SendCommand(0x06, volume); // set volume
 }

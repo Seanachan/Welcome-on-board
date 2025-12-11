@@ -1,5 +1,5 @@
 #include <xc.h>
-
+#include "SPI.h"
 // --- 2. SPI ??? (?? PIC18F4520) ---
 void SPI_Init(void)
 {
