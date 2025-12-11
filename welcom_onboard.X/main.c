@@ -52,10 +52,6 @@
 // CONFIG7H
 #pragma config EBTRB = OFF // Boot Block Table Read Protection bit (Boot block (000000-0007FFh) not protected from table reads executed in other blocks)
 
-// ==========================================
-//  PIN DEFINITIONS
-// ==========================================
-
 // Standard includes
 #include <ctype.h>
 #include <stdbool.h>
@@ -69,8 +65,8 @@
 #include "UART.h"
 #include "motor.h"
 #include "SPI.h"
-
 #include "seg7/seg7.h"
+
 // Definitions
 #define _XTAL_FREQ 4000000
 #define VR_MAX ((1 << 10) - 1)
@@ -81,7 +77,6 @@ static int speed = 0;   // Motor speed
 const int array[] = {0, 40, 50, 60};
 
 int state = -1;
-
 long long adc_sum = 0;
 int sum_cnt = 0;
 
@@ -139,29 +134,36 @@ void keyboard_input(char *str)
     if (strcmp(str, "FORWARD") == 0)
     {
         // move robot forward
+        forward();
     }
     else if (strcmp(str, "REVERSE") == 0)
     {
         // move robot backward
+        backward();
     }
     else if (strcmp(str, "STRAIGHT") == 0)
     {
+        // steering straight
     }
     else if (strcmp(str, "TURN_LEFT") == 0)
     {
         // steering left
+        turnLeft();
     }
     else if (strcmp(str, "TURN_RIGHT") == 0)
     {
         // steering right
+        turnRight();
     }
     else if (strcmp(str, "HIGH_SPEED") == 0)
     {
-        // steering left
+        // set high speed
+        highSpeed();
     }
     else if (strcmp(str, "LOW_SPEED") == 0)
     {
-        // steering left
+        // set low speed
+        lowSpeed();
     }
     else if (strcmp(str, "PLAY_MUSIC") == 0)
     {
@@ -272,9 +274,9 @@ void main(void)
         else
         {
             //            fail_count++;
-            //            if ((fail_count % 800) == 0)
-            //            { // every 200 misses, dump debug and re-init RF
-            //                MFRC522_DebugStatus();
+            //    if ((fail_count % 800) == 0)
+            //    { // every 200 misses, dump debug and re-init RF
+            //        MFRC522_DebugStatus();
             // MFRC522_Init();
             //            }
             // putch('e');
