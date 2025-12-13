@@ -67,9 +67,9 @@ void ADC_Initialize(void)
     ADCON2bits.ADFM = 1;     // right justified
 
     // step2
-    PIE1bits.ADIE = 1;   // Enable ADC interrupt
+    PIE1bits.ADIE = 0;   // Enable ADC interrupt
     PIR1bits.ADIF = 0;   // Clear ADC interrupt flag
-    IPR1bits.ADIP = 1;   // high priority
+    IPR1bits.ADIP = 0;   // low priority
     INTCONbits.PEIE = 1; // Enable peripheral interrupts
     INTCONbits.GIE = 1;  // Enable global interrupts
 

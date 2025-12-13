@@ -53,40 +53,40 @@ void US_Trigger(void) {
 }
 
 // --- Interrupt Service Routine ---
-void __interrupt(high_priority) ISR(void) {
-    // INT0: ECHO signal
-    if(INTCONbits.INT0IF) {
-        if(measuring) {
-            if(INTCON2bits.INTEDG0) {  // Rising edge
-                start_time = TMR1;
-                tmr_ticks = 0;          // reset overflow count
-                INTCON2bits.INTEDG0 = 0; // next: falling edge
-            } else {                     // Falling edge
-                end_time = TMR1;
-                // compute total ticks including overflow
-                long long total_ticks;
-                if(end_time >= start_time) {
-                    total_ticks = (tmr_ticks + end_time) - start_time;
-                } else {
-                    // Timer1 rolled over between rising and falling edge
-                    total_ticks = (tmr_ticks + 65536 + end_time) - start_time;
-                }
-                distance = total_ticks / 14;   // convert to cm
-                if(distance > 400) distance = 400; // limit max distance
-                if(distance < 2) distance = 2;     // limit min distance
-                measuring = 0;
-                INTCON2bits.INTEDG0 = 1;          // next: rising edge
-            }
-        }
-        INTCONbits.INT0IF = 0; // clear INT0 flag
-    }
-
-    // Timer1 overflow
-    if(PIR1bits.TMR1IF) {
-        tmr_ticks += 65536;      // accumulate overflow ticks
-        PIR1bits.TMR1IF = 0;     // clear Timer1 interrupt flag
-    }
-}
+//void __interrupt(high_priority) ISR(void) {
+//    // INT0: ECHO signal
+//    if(INTCONbits.INT0IF) {
+//        if(measuring) {
+//            if(INTCON2bits.INTEDG0) {  // Rising edge
+//                start_time = TMR1;
+//                tmr_ticks = 0;          // reset overflow count
+//                INTCON2bits.INTEDG0 = 0; // next: falling edge
+//            } else {                     // Falling edge
+//                end_time = TMR1;
+//                // compute total ticks including overflow
+//                long long total_ticks;
+//                if(end_time >= start_time) {
+//                    total_ticks = (tmr_ticks + end_time) - start_time;
+//                } else {
+//                    // Timer1 rolled over between rising and falling edge
+//                    total_ticks = (tmr_ticks + 65536 + end_time) - start_time;
+//                }
+//                distance = total_ticks / 14;   // convert to cm
+//                if(distance > 400) distance = 400; // limit max distance
+//                if(distance < 2) distance = 2;     // limit min distance
+//                measuring = 0;
+//                INTCON2bits.INTEDG0 = 1;          // next: rising edge
+//            }
+//        }
+//        INTCONbits.INT0IF = 0; // clear INT0 flag
+//    }
+//
+//    // Timer1 overflow
+//    if(PIR1bits.TMR1IF) {
+//        tmr_ticks += 65536;      // accumulate overflow ticks
+//        PIR1bits.TMR1IF = 0;     // clear Timer1 interrupt flag
+//    }
+//}
 
 // --- Return measured distance ---
 uint16_t US_GetDistance(void) {

@@ -53,7 +53,7 @@ unsigned char PN532_IsReady(void) {
 
 // 等待直到 Ready
 unsigned char PN532_WaitReady(void) {
-    unsigned int timeout = 2000; // 2 sec
+    unsigned int timeout = 1000; // 2 sec
     while(timeout > 0) {
         if(PN532_IsReady()) return 1;
         __delay_ms(1);
