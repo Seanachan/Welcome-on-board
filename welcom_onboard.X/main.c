@@ -68,109 +68,68 @@
 #include "seg7/seg7.h"
 #include "US/US.h"
 #include "light.h"
+#include "oled/oled.h"
+#include "oled/oled_bitmap.h"
 
 // Definitions
 #define _XTAL_FREQ 4000000
 #define STR_MAX 100
 #define VR_MAX ((1 << 10) - 1)
-// char buffer[STR_MAX];
-// int buffer_size = 0;
-bool btn_interr = false;
 // Global Variables
 const int array[] = {0, 40, 50, 60};
 
 int state = -1;
 long long adc_sum = 0;
 int sum_cnt = 0;
-// void putch(char data)
-// { // Output on Terminal
-//     if (data == '\n' || data == '\r')
-//     {
-//         while (!TXSTAbits.TRMT)
-//             ;
-//         TXREG = '\r';
-//         while (!TXSTAbits.TRMT)
-//             ;
-//         TXREG = '\n';
-//     }
-//     else
-//     {
-//         while (!TXSTAbits.TRMT)
-//             ;
-//         TXREG = data;
-//     }
-// }
-
-// void ClearBuffer()
-// {
-//     for (int i = 0; i < STR_MAX; i++)
-//         buffer[i] = '\0';
-//     buffer_size = 0;
-// }
-
-// void MyusartRead()
-// {
-//     char data = RCREG;
-//     if (!isprint(data) && data != '\r')
-//         return;
-//     buffer[buffer_size++] = data;
-//     putch(data);
-// }
-
-// int GetString(char *str)
-// {
-//     if (buffer[buffer_size - 1] == '\r')
-//     {
-//         buffer[--buffer_size] = '\0';
-//         strcpy(str, buffer);
-//         ClearBuffer();
-//         return 1;
-//     }
-//     else
-//     {
-//         str[0] = '\0';
-//         return 0;
-//     }
-// }
 
 const int light_val = 550;
 
 void __interrupt(high_priority) Hi_ISR(void)
 {
-    
+
     // INT0: ECHO signal (US)
-    if(INTCONbits.INT0IF) {
-        if(measuring) {
-            if(INTCON2bits.INTEDG0) {  // Rising edge
+    if (INTCONbits.INT0IF)
+    {
+        if (measuring)
+        {
+            if (INTCON2bits.INTEDG0)
+            { // Rising edge
                 start_time = TMR1;
-                tmr_ticks = 0;          // reset overflow count
+                tmr_ticks = 0;           // reset overflow count
                 INTCON2bits.INTEDG0 = 0; // next: falling edge
-            } else {                     // Falling edge
+            }
+            else
+            { // Falling edge
                 end_time = TMR1;
                 // compute total ticks including overflow
                 long long total_ticks;
-                if(end_time >= start_time) {
+                if (end_time >= start_time)
+                {
                     total_ticks = (tmr_ticks + end_time) - start_time;
-                } else {
+                }
+                else
+                {
                     // Timer1 rolled over between rising and falling edge
                     total_ticks = (tmr_ticks + 65536 + end_time) - start_time;
                 }
-                distance = total_ticks / 56;   // convert to cm
-                if(distance > 400) distance = 400; // limit max distance
-                if(distance < 2) distance = 2;     // limit min distance
+                distance = total_ticks / 56; // convert to cm
+                if (distance > 400)
+                    distance = 400; // limit max distance
+                if (distance < 2)
+                    distance = 2; // limit min distance
                 measuring = 0;
-                INTCON2bits.INTEDG0 = 1;          // next: rising edge
+                INTCON2bits.INTEDG0 = 1; // next: rising edge
             }
         }
         INTCONbits.INT0IF = 0; // clear INT0 flag
     }
 
     // Timer1 overflow
-    if(PIR1bits.TMR1IF) {
-        tmr_ticks += 65536;      // accumulate overflow ticks
-        PIR1bits.TMR1IF = 0;     // clear Timer1 interrupt flag
+    if (PIR1bits.TMR1IF)
+    {
+        tmr_ticks += 65536;  // accumulate overflow ticks
+        PIR1bits.TMR1IF = 0; // clear Timer1 interrupt flag
     }
-    
 
     return;
 }
@@ -187,30 +146,38 @@ void __interrupt(low_priority) Lo_ISR(void)
 
         MyusartRead();
     }
-    
+
     return;
 }
 
-void check_light(){
+void check_light()
+{
+    if (ADCON0bits.GO)
+        return; // ADC busy
+
     long long value = (ADRESH << 8) | ADRESL;
-    //do sth
+    // do sth
     adc_sum += value;
     sum_cnt++;
     int max_cnt = 1;
-    if(sum_cnt >= max_cnt){
+    if (sum_cnt >= max_cnt)
+    {
         long long average_value = adc_sum / max_cnt;
-        if(average_value > light_val){
+        if (average_value > light_val)
+        {
             light_start();
-        }else{
+        }
+        else
+        {
             light_stop();
         }
-        //seg7_displayNumber(average_value);
+        // seg7_displayNumber(average_value);
         adc_sum = 0;
         sum_cnt = 0;
     }
 
     // step5 & go back step3
-    __delay_ms(3);  // delay at least 2tad (4M ver.)
+    __delay_ms(3); // delay at least 2tad (4M ver.)
     ADCON0bits.GO = 1;
 }
 
@@ -218,9 +185,7 @@ void keyboard_input(char *str)
 {
     for (int i = 0; i < strlen(str); i++)
         str[i] = toupper(str[i]);
-    // printf("BT CMD: %s\n", str);
-
-    // __delay_ms(30);
+    printf(" %s\n", str);
 
     if (strcmp(str, "FORWARD") == 0)
     {
@@ -263,7 +228,7 @@ void keyboard_input(char *str)
     }
     else if (strcmp(str, "PLAY_MUSIC") == 0)
     {
-//        printf("Play music\n");
+        //        printf("Play music\n");
         DF_PlayTrack1(); // Play track 1
     }
     else if (strcmp(str, "STOP_MUSIC") == 0)
@@ -297,54 +262,57 @@ void main(void)
     US_Init();
     ADC_Initialize();
     light_init();
-//    seg7_setBrightness(7);
-//    seg7_display4(gear[0][0], gear[0][1], gear[0][2], gear[0][3]);
-    
+    OLED_Init();
+    //    seg7_setBrightness(7);
+    //    seg7_display4(gear[0][0], gear[0][1], gear[0][2], gear[0][3]);
+
     unsigned char uid[7], uidLen;
     unsigned char status;
     char input_str[STR_MAX];
 
     printf("System Initialzed\r\n");
-    
-    if(!PN532_Init()) {
-        while(1);
-    }
-    __delay_ms(2000);
-    
-    //DF_PlayTrack1(); // Play track 1
+
+    __delay_ms(1000);
+
+    printf("After 1 seconds\r\n");
+
+    while (!PN532_Init())
+        ;
+
+    OLED_DrawBitmap(img_sad);
+
     while (1)
     {
-        
+
         if (GetString(input_str))
             keyboard_input(input_str);
-        // __delay_ms(100);
         // CCP
         CCPR1L = speed;
         CCP1CONbits.DC1B = 0;
         CCPR2L = speed;
         CCP2CONbits.DC2B = 0;
-        
+
         if (PN532_ReadUID(uid, &uidLen))
         {
 
             printf("UID");
             if (uid[1] == 0xB3 && uid[2] == 0x31 && uid[3] == 0x4E)
             {
-                //printf("Match! Play Music.\r\n");
+                // printf("Match! Play Music.\r\n");
                 DF_PlayTrack1();
             }
 
-            __delay_ms(1000); 
+            __delay_ms(1000);
         }
         else
         {
-            __delay_ms(50); 
+            __delay_ms(50);
         }
-        
+
         check_light();
         // US
         US_Trigger();
-        __delay_ms(60);
+        __delay_ms(10);
         uint16_t d = US_GetDistance();
         seg7_displayNumber(d);
     }
