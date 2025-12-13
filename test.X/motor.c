@@ -1,3 +1,4 @@
+// CONFIG1H
 #pragma config OSC = INTIO67 // Oscillator Selection bits (HS oscillator)
 #pragma config FCMEN = OFF   // Fail-Safe Clock Monitor Enable bit (Fail-Safe Clock Monitor disabled)
 #pragma config IESO = ON     // Internal/External Oscillator Switchover bit (Oscillator Switchover mode disabled)
@@ -13,7 +14,7 @@
 
 // CONFIG3H
 #pragma config CCP2MX = PORTC // CCP2 MUX bit (CCP2 input/output is multiplexed with RC1)
-#pragma config PBADEN = OFF   // PORTB A/D Enable bit (PORTB<4:0> pins are configured as analog input channels on Reset)
+#pragma config PBADEN = ON    // PORTB A/D Enable bit (PORTB<4:0> pins are configured as analog input channels on Reset)
 #pragma config LPT1OSC = OFF  // Low-Power Timer1 Oscillator Enable bit (Timer1 configured for higher power operation)
 #pragma config MCLRE = ON     // MCLR Pin Enable bit (MCLR pin enabled; RE3 input pin disabled)
 
@@ -52,34 +53,82 @@
 // CONFIG7H
 #pragma config EBTRB = OFF // Boot Block Table Read Protection bit (Boot block (000000-0007FFh) not protected from table reads executed in other blocks)
 
-// Standard includes
 #include <ctype.h>
+// #include <pic18f4520.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <xc.h>
 
-// Self includes
-#include "bluetooth.h"
-#include "DFPlayer.h"
-// #include "UART.h"
-#include "motor.h"
-#include "SPI.h"
-#include "seg7/seg7.h"
-
-// Definitions
 #define _XTAL_FREQ 4000000
 #define STR_MAX 100
 #define VR_MAX ((1 << 10) - 1)
+
 char buffer[STR_MAX];
 int buffer_size = 0;
 bool btn_interr = false;
-// Global Variables
-const int array[] = {0, 40, 50, 60};
 
-int state = -1;
-long long adc_sum = 0;
-int sum_cnt = 0;
+// add mode variable
+unsigned char mode = 1;
+int volume = 20; // initial volume
+// ----- State machine for 3-LED pattern -----
+void set_LED(int value);
+
+// --- DFPlayer Functions ---
+void UART_WriteByte(unsigned char b)
+{
+    while (!TXSTAbits.TRMT)
+        ; // ????????
+    TXREG = b;
+}
+
+void DF_SendCommand(unsigned char cmd, unsigned int param)
+{
+    unsigned char buf[6] = {
+        0xFF, 0x06, cmd, 0x00,
+        (unsigned char)(param >> 8),
+        (unsigned char)(param & 0xFF)};
+
+    unsigned int sum = 0;
+    for (int i = 0; i < 6; i++)
+        sum += buf[i];
+    unsigned int checksum = 0xFFFF - sum + 1;
+
+    UART_WriteByte(0x7E); // start
+    for (int i = 0; i < 6; i++)
+        UART_WriteByte(buf[i]);
+    UART_WriteByte((unsigned char)(checksum >> 8));
+    UART_WriteByte((unsigned char)(checksum & 0xFF));
+    UART_WriteByte(0xEF); // end
+
+    __delay_ms(50);
+}
+
+void DF_Init(void)
+{
+    DF_SendCommand(0x06, volume); // volume = 20
+}
+
+void DF_PlayTrack1(void)
+{
+    DF_SendCommand(0x03, 1); // ?? 0001.mp3
+}
+void DF_Stop(void)
+{
+    DF_SendCommand(0x16, 0); // ????
+}
+void DF_Volume(int vol_change)
+{
+    if (volume + vol_change < 0)
+        volume = 0;
+    if (volume > 30)
+        volume = 30;
+    volume = volume + vol_change;
+    DF_SendCommand(0x06, volume); // set volume
+}
+// ---------------- Uart --------------------
+
 void putch(char data)
 { // Output on Terminal
     if (data == '\n' || data == '\r')
@@ -117,7 +166,7 @@ void MyusartRead()
 
 int GetString(char *str)
 {
-  if (buffer[buffer_size - 1] == '\r')
+    if (buffer[buffer_size - 1] == '\r')
     {
         buffer[--buffer_size] = '\0';
         strcpy(str, buffer);
@@ -130,33 +179,7 @@ int GetString(char *str)
         return 0;
     }
 }
-void __interrupt(high_priority) Hi_ISR(void)
-{
 
-    if (PIR1bits.ADIF)
-    {
-        long long value = (ADRESH << 8) | ADRESL;
-        // do sth
-        adc_sum += value;
-        sum_cnt++;
-        if (sum_cnt >= 20)
-        {
-            long long average_value = adc_sum / 20;
-            seg7_displayNumber(average_value);
-            // __delay_ms(500);
-            adc_sum = 0;
-            sum_cnt = 0;
-        }
-
-        PIR1bits.ADIF = 0; // clear flag bit
-
-        // step5 & go back step3
-        // __delay_ms(3); // delay at least 2tad (4M ver.)
-        ADCON0bits.GO = 1;
-    }
-
-    return;
-}
 void __interrupt(low_priority) Lo_ISR(void)
 {
     if (RCIF)
@@ -170,8 +193,108 @@ void __interrupt(low_priority) Lo_ISR(void)
 
         MyusartRead();
     }
+
+    // process other interrupt sources here, if required
     return;
 }
+
+// ---------------- Settings --------------------
+
+void Initialize(void)
+{
+    // Configure oscillator
+    OSCCONbits.IRCF = 0b110; // 4 MHz
+
+    // Configure I/O ports
+    TRISA &= 0xC1; // Set RA1-RA5 as outputs for LED
+    TRISB = 1;     // RB0 as input for button
+    TRISC = 0;     // PORTC as output for servo
+    LATA &= 0xC1;  // Clear RA1-RA5
+    LATC = 0;      // Clear PORTC
+
+    // Configure interrupts
+    INTCONbits.INT0IF = 0; // Clear INT0 flag
+    INTCONbits.INT0IE = 1; // Enable INT0 interrupt
+    // PIE1bits.ADIE = 1;     // Enable ADC interrupt
+    // PIR1bits.ADIF = 0;     // Clear ADC flag
+    INTCONbits.PEIE = 1; // Enable peripheral interrupt
+    INTCONbits.GIE = 1;  // Enable global interrupt
+    RCONbits.IPEN = 1;   // enable Interrupt Priority mode
+    INTCONbits.GIEH = 1; // enable high priority interrupt
+    INTCONbits.GIEL = 1; // disable low priority interrupt
+
+    TRISCbits.TRISC6 = 1; // RC6(TX) : Transmiter set 1 (output)
+    TRISCbits.TRISC7 = 1; // RC7(RX) : Receiver set 1   (input)
+
+    // Setting Baud rate
+    // Baud rate = 1200 (Look up table)
+    TXSTAbits.SYNC = 0;    // Synchronus or Asynchronus
+    BAUDCONbits.BRG16 = 0; // 16 bits or 8 bits
+    TXSTAbits.BRGH = 1;    // High Baud Rate Select bit
+    SPBRG = 25;            // Control the period
+
+    // Serial enable
+    RCSTAbits.SPEN = 1; // Enable asynchronus serial port (must be set to 1)
+    PIR1bits.TXIF = 0;  // Set when TXREG is empty
+    PIR1bits.RCIF = 0;  // Will set when reception is complete
+    TXSTAbits.TXEN = 1; // Enable transmission
+    RCSTAbits.CREN = 1; // Continuous receive enable bit, will be cleared when error occured
+    PIE1bits.TXIE = 0;  // Wanna use Interrupt (Transmit)
+    IPR1bits.TXIP = 0;  // Interrupt Priority bit
+    PIE1bits.RCIE = 1;  // Wanna use Interrupt (Receive)
+    IPR1bits.RCIP = 0;  // Interrupt Priority bit
+
+    /* Reiceiver (input)
+     RSR   : Current Data
+     RCREG : Correct Data (have been processed) : read data by reading the RCREG Register
+    */
+    ADCON1 = 0x0F; // Set all pins to Digital Mode
+    LATBbits.LATB4 = 1;
+    TRISBbits.TRISB4 = 0; // Make RB4 Output
+    // Start ADC conversion
+    // ADCON0bits.GO = 1;
+}
+
+// ---------------- OOP --------------------
+
+int get_LED()
+{
+    return (LATA >> 1);
+}
+
+void set_LED(int value)
+{
+    LATA = (value << 1);
+}
+
+void set_LED_separately(int a, int b, int c, int d, int e)
+{
+    LATA = (a << 5) + (b << 4) + (c << 3) + (d << 2) + (e << 1);
+}
+
+void set_LED_analog(int value)
+{
+    CCPR2L = (value >> 2);
+    CCP2CONbits.DC2B = (value & 0b11);
+}
+
+void __interrupt(high_priority) H_ISR()
+{
+}
+
+int delay(double sec)
+{
+    btn_interr = false;
+    for (int i = 0; i < sec * 1000 / 10; i++)
+    {
+        if (btn_interr)
+            return -1;
+        __delay_ms(10);
+    }
+    return 0;
+}
+
+// --------------- TODO ------------------
 
 void keyboard_input(char *str)
 {
@@ -179,50 +302,43 @@ void keyboard_input(char *str)
         str[i] = toupper(str[i]);
     printf("BT CMD: %s\n", str);
 
-    // __delay_ms(30);
-
     if (strcmp(str, "FORWARD") == 0)
     {
         // move robot forward
-        forward();
+        set_LED(0xFF); // example
     }
     else if (strcmp(str, "REVERSE") == 0)
     {
         // move robot backward
-        backward();
+        set_LED(0x00); // example
     }
     else if (strcmp(str, "STRAIGHT") == 0)
     {
-        // steering straight
     }
     else if (strcmp(str, "TURN_LEFT") == 0)
     {
         // steering left
-        turnLeft();
     }
     else if (strcmp(str, "TURN_RIGHT") == 0)
     {
         // steering right
-        turnRight();
     }
     else if (strcmp(str, "HIGH_SPEED") == 0)
     {
-        // set high speed
-        highSpeed();
+        // steering left
     }
     else if (strcmp(str, "LOW_SPEED") == 0)
     {
-        // set low speed
-        lowSpeed();
+        // steering left
     }
     else if (strcmp(str, "PLAY_MUSIC") == 0)
     {
-        // printf("Play music\n");
+        printf("Play music\n");
         DF_PlayTrack1(); // Play track 1
     }
     else if (strcmp(str, "STOP_MUSIC") == 0)
     {
-        // printf("Stop music\n");
+        printf("Stop music\n");
         DF_Stop(); // Stop music
     }
     else if (strcmp(str, "VOL_UP") == 0)
@@ -237,72 +353,18 @@ void keyboard_input(char *str)
     {
         printf("Unknown CMD: %s\n", str);
     }
-    // __delay_ms(50);
 }
 
-void main(void)
+void main()
 {
-    OSCCONbits.IRCF = 0b110; // 4 MHz
-    ADCON1 = 0x0F;
-    CCP_Seg7_Initialize();
-    // SPI_Init();
-    // MFRC522_Init();
-    // Initialize_UART();
-    TRISC = 0;
-    LATC = 0;
-    TRISCbits.TRISC6 = 0; // TX as output
-    TRISCbits.TRISC7 = 1; // RX as input
-    LATCbits.LATC6 = 0;   // Idle state high
-    LATCbits.LATC7 = 0;   // Idle state high
-
-    // Baud rate ~9600 @ 4MHz using 16-bit BRG
-    TXSTAbits.SYNC = 0;    // Asynchronous
-    BAUDCONbits.BRG16 = 0; // 8-bit Baud Rate Generator
-    TXSTAbits.BRGH = 1;    // High speed
-    // SPBRGH = 0;
-    SPBRG = 25; // 4MHz -> 9600 bps
-
-    // Serial enable
-    RCSTAbits.SPEN = 1; // Enable async serial port
-    PIR1bits.TXIF = 0;  // Clear TX flag
-    PIR1bits.RCIF = 0;  // Clear RX flag
-    TXSTAbits.TXEN = 1; // Enable transmission
-    RCSTAbits.CREN = 1; // Enable continuous receive
-    PIE1bits.TXIE = 0;  // Disable TX interrupt
-    IPR1bits.TXIP = 0;  // TX interrupt priority
-    PIE1bits.RCIE = 1;  // Enable RX interrupt
-    IPR1bits.RCIP = 0;  // RX interrupt priority (low)
-    // DF_Init();
-    seg7_setBrightness(7);
-    seg7_display4(gear[0][0], gear[0][1], gear[0][2], gear[0][3]);
-    __delay_ms(500);
-    unsigned char uid[7], uidLen;
-    unsigned char status;
-
+    Initialize();
+    DF_Init();
+    printf("PIC ready\r\n");
+    char str[STR_MAX];
+DF_PlayTrack1();
     while (1)
     {
-        // __delay_ms(100);
-        // CCP
-        CCPR1L = speed;
-        CCP1CONbits.DC1B = 0;
-        CCPR2L = speed;
-        CCP2CONbits.DC2B = 0;
-
-        if(PN532_ReadUID(uid, &uidLen)) {
-            
-            
-            // 【修改這裡】
-            // 你的卡片是 7 bytes (或 8 bytes)，所以不能檢查 == 4
-            // 直接比對前幾個獨特的號碼即可 (04 B3 31 4E)
-            if(uid[1]==0xB3 && uid[2]==0x31 && uid[3]==0x4E) {
-                //printf("Match! Play Music.\r\n");
-                DF_PlayTrack1();
-            }
-            
-            __delay_ms(1000); // 讀到卡後暫停一秒
-        } else {
-            __delay_ms(50); // 沒讀到卡稍微休息
-        }
-        
+         if (GetString(str))
+            keyboard_input(str);
     }
 }

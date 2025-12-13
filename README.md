@@ -16,17 +16,17 @@ We utilize the following hardware components to ensure precise control and inter
 
 ### Microcontroller & Processing
 
-1.  **MCU:** Microchip PIC18F4520
-2.  **Programmer:** MPLAB PICkit 4
-3.  **Audio:** DFPlayer Mini (MP3 Player Module)
+1. **MCU:** Microchip PIC18F4520
+2. **Programmer:** MPLAB PICkit 4
+3. **Audio:** DFPlayer Mini (MP3 Player Module)
 
 ### Sensors
 
 ### Sensors & Input
 
-1.  **Identification:** RFID Sensor Module (RC522)
-2.  **Environment:** Ambient Light Sensor (ALS) Module
-3.  **Navigation:** Ultrasonic
+1. **Identification:** RFID Sensor Module (RC522)
+2. **Environment:** Ambient Light Sensor (ALS) Module
+3. **Navigation:** Ultrasonic
 
 ### Displays
 
@@ -35,17 +35,17 @@ We utilize the following hardware components to ensure precise control and inter
 
 ### Actuators & Power
 
-1.  **Drive:** L298N Motor Driver
-2.  **Motors:** DC Motors
-3.  **Power:** 6x AA Batteries
+1. **Drive:** L298N Motor Driver
+2. **Motors:** DC Motors
+3. **Power:** 6x AA Batteries
 
 ## Mobile App Workflow
 
-1.  **Voice Activation** - Tapping the mic button initializes the device's native speech recognition engine.
-2.  **Real-Time Transcription** - The app captures audio input and converts speech to text instantaneously.
-3.  **Intent Resolution** - The transcribed text is processed to identify the user's intent.
-4.  **LLM Parsing** - The text is sent to gemini-2.0-flash to convert natural language (e.g., "Please turn left now") into a standardized protocol command (e.g., `TURN_LEFT`).
-5.  **Bluetooth Transmission** - The resolved command is transmitted via Bluetooth to the HC-05/ESP32 receiver.
+1. **Voice Activation** - Tapping the mic button initializes the device's native speech recognition engine.
+2. **Real-Time Transcription** - The app captures audio input and converts speech to text instantaneously.
+3. **Intent Resolution** - The transcribed text is processed to identify the user's intent.
+4. **LLM Parsing** - The text is sent to gemini-2.0-flash to convert natural language (e.g., "Please turn left now") into a standardized protocol command (e.g., `TURN_LEFT`).
+5. **Bluetooth Transmission** - The resolved command is transmitted via Bluetooth to the HC-05/ESP32 receiver.
 
 ## Voice Commands
 
@@ -92,4 +92,4 @@ Once your phone is paired with the HC-05 module via the [Voice Command Hub App](
 
 ## App Interface
 
-<img src='App_Interface.jpg' height=1140 width=540>
+<img src='imgs/App_Interface.jpg' height=1140 width=540>
