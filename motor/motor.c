@@ -60,6 +60,7 @@
 #include "string.h"
 #include <xc.h>
 #include "seg7.h"
+#include "light.h"
 
 #define _XTAL_FREQ 4000000
 
@@ -147,6 +148,7 @@ void SYSTEM_Initialize(void)
     seg7_init();
     seg7_setBrightness(7);
     ADC_Initialize();
+    light_init();
 
 }
 
@@ -225,6 +227,8 @@ int state = -1;
 
 long long adc_sum = 0;
 int sum_cnt = 0;
+int light_val = 550;
+
 
 void __interrupt(high_priority) Hi_ISR(void)
 {
@@ -271,6 +275,11 @@ void __interrupt(high_priority) Hi_ISR(void)
         sum_cnt++;
         if(sum_cnt >= 20){
             long long average_value = adc_sum / 20;
+            if(average_value > light_val){
+                light_start();
+            }else{
+                light_stop();
+            }
             seg7_displayNumber(average_value);
             __delay_ms(500);
             adc_sum = 0;
