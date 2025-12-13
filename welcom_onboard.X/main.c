@@ -198,27 +198,10 @@ void main(void)
     DF_Init();
     SPI_Init();
     CCP_Seg7_Initialize();
-    MFRC522_Init();
+    PN532_Init();
     __delay_ms(500);
-    unsigned char ver = MFRC522_ReadReg(0x37); // ?????
-    // ==========================================
-    // [???? 2]??????? (??????)
-    // ==========================================
-    // RFCfgReg (0x26) -> ?? RxGain ??? 48dB (0x07 << 4)
-    MFRC522_WriteReg(0x26, 0x7F);
-    // printf("Antenna Gain set to Max.\r\n");
-
-    // ????
-    unsigned char temp = MFRC522_ReadReg(MFRC522_REG_TX_CONTROL);
-    if (!(temp & 0x03))
-    {
-        SetBitMask(MFRC522_REG_TX_CONTROL, 0x03);
-    }
-    // printf("Waiting for Card...\r\n");
-
+    unsigned char uid[7], uidLen;
     unsigned char status;
-    unsigned char str[16]; // ???????
-    unsigned int fail_count = 0;
 
     while (1)
     {
@@ -233,53 +216,21 @@ void main(void)
         CCPR2L = speed;
         CCP2CONbits.DC2B = 0;
 
-        // ?? REQALL (0x52) ???????? REQIDL (0x26) ??
-        // 0x52 = ????????? (?????)
-        // printf(".");
-        unsigned char tx_status = MFRC522_ReadReg(MFRC522_REG_TX_CONTROL);
-        if ((tx_status & 0x03) == 0)
-        {
-            //            printf("[Warning] Antenna was reset! (Power Issue)\r\n");
-            // putch('.');
-            //  ??????
-            SetBitMask(MFRC522_REG_TX_CONTROL, 0x03);
-        }
-        status = MFRC522_Request(0x52, str);
-
-        if (status == MI_OK)
-        {
-            fail_count = 0;
-            printf("Found Card! Reading UID...\r\n"); // ??? 1???????
-
-            status = MFRC522_Anticoll(str);
-
-            if (status == MI_OK)
-            {
-                printf("UID: %02X %02X %02X %02X \r\n", str[0], str[1], str[2], str[3]);
-                if (str[0] == 0xB3 && str[1] == 0x31 && str[2] == 0x4E && str[3] == 0x05)
-                {
-                    printf("Student Card Detected! Playing Music...\r\n");
-                    DF_PlayTrack1();
-                }
-                else
-                {
-                }
-                // __delay_ms(1000);
+        if(PN532_ReadUID(uid, &uidLen)) {
+            
+            
+            // 【修改這裡】
+            // 你的卡片是 7 bytes (或 8 bytes)，所以不能檢查 == 4
+            // 直接比對前幾個獨特的號碼即可 (04 B3 31 4E)
+            if(uid[1]==0xB3 && uid[2]==0x31 && uid[3]==0x4E) {
+                //printf("Match! Play Music.\r\n");
+                DF_PlayTrack1();
             }
-            else
-            {
-                // printf("Error: Collision Fail\r\n"); // ??? 2???? ID
-            }
+            
+            __delay_ms(1000); // 讀到卡後暫停一秒
+        } else {
+            __delay_ms(50); // 沒讀到卡稍微休息
         }
-        else
-        {
-            //            fail_count++;
-            //    if ((fail_count % 800) == 0)
-            //    { // every 200 misses, dump debug and re-init RF
-            //        MFRC522_DebugStatus();
-            // MFRC522_Init();
-            //            }
-            // putch('e');
-        }
+        
     }
 }
