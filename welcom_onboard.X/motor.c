@@ -5,6 +5,8 @@
 #include "string.h"
 #include <xc.h>
 #include "seg7/seg7.h"
+#include "oled/oled.h"
+#include "oled/oled_bitmap.h"
 #include "motor.h"
 int speed = 0;
 void CCP_Seg7_Initialize(void)
@@ -83,6 +85,7 @@ void forward()
     LATDbits.LATD6 = 0;
     LATDbits.LATD5 = 1;
     LATDbits.LATD4 = 0;
+    OLED_DrawBitmap(img_smile);
 }
 
 void GOGO()
@@ -99,6 +102,7 @@ void backward()
     LATDbits.LATD5 = 0;
     LATDbits.LATD4 = 1;
     seg7_display4(gear[1][0], gear[1][1], gear[1][2], gear[1][3]);
+    OLED_DrawBitmap(img_sad);
 }
 
 void highSpeed()
