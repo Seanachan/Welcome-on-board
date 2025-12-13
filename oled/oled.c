@@ -5,7 +5,8 @@
 // =====================================================
 
 static void i2c_delay(void) {
-    __delay_us(4);
+//    __delay_us(1);
+    NOP();
 }
 
 static void i2c_init_pins(void) {
@@ -92,7 +93,7 @@ static void oled_data(uint8_t d) {
 }
 
 static void oled_stream(const uint8_t *buf, uint16_t len) {
-    const uint16_t CHUNK = 64;
+    const uint16_t CHUNK = 128;
     uint16_t p = 0;
 
     while (p < len) {
@@ -164,11 +165,12 @@ void OLED_Clear(void) {
 // =====================================================
 
 void OLED_DrawBitmap(const uint8_t *b) {
-    for (uint8_t page=0; page<8; page++) {
+    for (uint8_t page=1; page<7; page++) {
         oled_cmd(0xB0 | page);
-        oled_cmd(0x00);
-        oled_cmd(0x10);
-        oled_stream(&b[page * 128], 128);
+        uint8_t col = 33;
+        oled_cmd(0x00 | (col & 0x0F));        // low nibble
+        oled_cmd(0x10 | ((col >> 4) & 0x0F)); // high nibble
+        oled_stream(&b[page * 128 + 33], 64);
     }
 }
 
