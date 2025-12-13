@@ -84,6 +84,48 @@ int sum_cnt = 0;
 
 const int light_val = 550;
 
+
+void check_light()
+{
+    if (ADCON0bits.GO)
+        return; // ADC busy
+
+    long long value = (ADRESH << 8) | ADRESL;
+    // do sth
+    adc_sum += value;
+    sum_cnt++;
+    int max_cnt = 1;
+    if (sum_cnt >= max_cnt)
+    {
+        long long average_value = adc_sum / max_cnt;
+        if (average_value > light_val)
+        {
+            light_start();
+        }
+        else
+        {
+            light_stop();
+        }
+         seg7_displayNumber(average_value);
+        adc_sum = 0;
+        sum_cnt = 0;
+    }
+
+    // step5 & go back step3
+    __delay_ms(3); // delay at least 2tad (4M ver.)
+    ADCON0bits.GO = 1;
+}
+
+void check_front(){
+    const int min_dis = 50;
+    US_Trigger();
+    __delay_ms(10);
+    uint16_t d = US_GetDistance();
+    if(d <= min_dis){
+        park();
+    }
+}
+
 void __interrupt(high_priority) Hi_ISR(void)
 {
 
@@ -146,39 +188,17 @@ void __interrupt(low_priority) Lo_ISR(void)
 
         MyusartRead();
     }
-
-    return;
-}
-
-void check_light()
-{
-    if (ADCON0bits.GO)
-        return; // ADC busy
-
-    long long value = (ADRESH << 8) | ADRESL;
-    // do sth
-    adc_sum += value;
-    sum_cnt++;
-    int max_cnt = 1;
-    if (sum_cnt >= max_cnt)
-    {
-        long long average_value = adc_sum / max_cnt;
-        if (average_value > light_val)
-        {
-            light_start();
-        }
-        else
-        {
-            light_stop();
-        }
-         seg7_displayNumber(average_value);
-        adc_sum = 0;
-        sum_cnt = 0;
+    
+    if(INTCONbits.TMR0IF){
+        INTCONbits.TMR0IF = 0;
+        TMR0H = 0xE7;
+        TMR0L = 0xF6;
+        
+        check_light();
+        check_front();
     }
 
-    // step5 & go back step3
-    __delay_ms(3); // delay at least 2tad (4M ver.)
-    ADCON0bits.GO = 1;
+    return;
 }
 
 void keyboard_input(char *str)
@@ -251,6 +271,28 @@ void keyboard_input(char *str)
     // __delay_ms(50);
 }
 
+void TMR0_Init(void)
+{
+    // Timer0 config
+    T0CONbits.T08BIT = 0;   // 16-bit mode
+    T0CONbits.T0CS   = 0;   // Internal clock (Fosc/4)
+    T0CONbits.PSA    = 0;   // Enable prescaler
+    T0CONbits.T0PS   = 0b100; // Prescaler 1:32
+
+    // Load preload value for 200ms
+    TMR0H = 0xE7;
+    TMR0L = 0xF6;
+
+    // Interrupt settings
+    INTCONbits.TMR0IF = 0;   // Clear flag
+    INTCONbits.TMR0IE = 1;   // Enable Timer0 interrupt
+    // Set Timer0 as LOW priority
+    INTCON2bits.TMR0IP = 0;
+
+    // Timer0 ON
+    T0CONbits.TMR0ON = 1;
+}
+
 void main(void)
 {
     OSCCONbits.IRCF = 0b110; // 4 MHz
@@ -279,8 +321,6 @@ void main(void)
     while (!PN532_Init())
         ;
 
-    OLED_DrawBitmap(img_sad);
-
     while (1)
     {
 
@@ -308,12 +348,5 @@ void main(void)
         {
             __delay_ms(50);
         }
-
-        check_light();
-        // US
-        US_Trigger();
-        __delay_ms(10);
-        uint16_t d = US_GetDistance();
-//        seg7_displayNumber(d);
     }
 }
