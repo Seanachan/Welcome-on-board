@@ -1,6 +1,7 @@
 #include <xc.h>
 #include "SPI.h"
 #include "UART.h"
+#include<stdio.h>
 void SPI_Init(void) {
     PN532_CS_TRIS = 0;   // Output
     PN532_SCK_TRIS = 0;  // Output
@@ -19,9 +20,9 @@ void SPI_WriteByte(unsigned char data) {
         data >>= 1;
 
         PN532_SCK_PIN = 1; // Clock High
-        __delay_us(2); 
+        __delay_us(50); 
         PN532_SCK_PIN = 0; // Clock Low
-        __delay_us(2);
+        __delay_us(50);
     }
 }
 
@@ -48,6 +49,7 @@ unsigned char PN532_IsReady(void) {
     SPI_WriteByte(PN532_SPI_STATREAD); // 0x02
     status = SPI_ReadByte();
     PN532_CS_PIN = 1;
+//    printf("%02X\r\n",status);
     return (status == PN532_SPI_READY);
 }
 
@@ -114,14 +116,13 @@ unsigned char PN532_Init(void) {
     PN532_SendCommand(cmd, sizeof(cmd));
     
     if(!PN532_WaitReady()) {
-//        printf("Error: PN532 Not Ready. Check Wiring & DIP Switch!\r\n");
+        printf("Error: PN532 Not Ready. Check Wiring & DIP Switch!\r\n");
         return 0;
     }
     
     // 讀取回應 (ACK + Data)
     PN532_ReadResponse(dummy, 15); 
-    
-//    printf("PN532 Ready!\r\n");
+     //    printf("PN532 Ready!\r\n");
     return 1;
 }
 
