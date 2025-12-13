@@ -1,5 +1,6 @@
 #include <xc.h>
 #include "SPI.h"
+#include "UART.h"
 void SPI_Init(void) {
     PN532_CS_TRIS = 0;   // Output
     PN532_SCK_TRIS = 0;  // Output
@@ -108,19 +109,19 @@ unsigned char PN532_Init(void) {
     unsigned char cmd[] = {PN532_COMMAND_SAMCONFIGURATION, 0x01, 0x14, 0x01};
     unsigned char dummy[20];
 
-    printf("Init PN532 (SPI)...\r\n");
+//    printf("Init PN532 (SPI)...\r\n");
     
     PN532_SendCommand(cmd, sizeof(cmd));
     
     if(!PN532_WaitReady()) {
-        printf("Error: PN532 Not Ready. Check Wiring & DIP Switch!\r\n");
+//        printf("Error: PN532 Not Ready. Check Wiring & DIP Switch!\r\n");
         return 0;
     }
     
     // 讀取回應 (ACK + Data)
     PN532_ReadResponse(dummy, 15); 
     
-    printf("PN532 Ready!\r\n");
+//    printf("PN532 Ready!\r\n");
     return 1;
 }
 

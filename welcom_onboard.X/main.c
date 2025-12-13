@@ -62,7 +62,7 @@
 // Self includes
 #include "bluetooth.h"
 #include "DFPlayer.h"
-// #include "UART.h"
+#include "UART.h"
 #include "motor.h"
 #include "SPI.h"
 #include "seg7/seg7.h"
@@ -71,8 +71,8 @@
 #define _XTAL_FREQ 4000000
 #define STR_MAX 100
 #define VR_MAX ((1 << 10) - 1)
-char buffer[STR_MAX];
-int buffer_size = 0;
+// char buffer[STR_MAX];
+// int buffer_size = 0;
 bool btn_interr = false;
 // Global Variables
 const int array[] = {0, 40, 50, 60};
@@ -80,56 +80,56 @@ const int array[] = {0, 40, 50, 60};
 int state = -1;
 long long adc_sum = 0;
 int sum_cnt = 0;
-void putch(char data)
-{ // Output on Terminal
-    if (data == '\n' || data == '\r')
-    {
-        while (!TXSTAbits.TRMT)
-            ;
-        TXREG = '\r';
-        while (!TXSTAbits.TRMT)
-            ;
-        TXREG = '\n';
-    }
-    else
-    {
-        while (!TXSTAbits.TRMT)
-            ;
-        TXREG = data;
-    }
-}
+// void putch(char data)
+// { // Output on Terminal
+//     if (data == '\n' || data == '\r')
+//     {
+//         while (!TXSTAbits.TRMT)
+//             ;
+//         TXREG = '\r';
+//         while (!TXSTAbits.TRMT)
+//             ;
+//         TXREG = '\n';
+//     }
+//     else
+//     {
+//         while (!TXSTAbits.TRMT)
+//             ;
+//         TXREG = data;
+//     }
+// }
 
-void ClearBuffer()
-{
-    for (int i = 0; i < STR_MAX; i++)
-        buffer[i] = '\0';
-    buffer_size = 0;
-}
+// void ClearBuffer()
+// {
+//     for (int i = 0; i < STR_MAX; i++)
+//         buffer[i] = '\0';
+//     buffer_size = 0;
+// }
 
-void MyusartRead()
-{
-    char data = RCREG;
-    if (!isprint(data) && data != '\r')
-        return;
-    buffer[buffer_size++] = data;
-    putch(data);
-}
+// void MyusartRead()
+// {
+//     char data = RCREG;
+//     if (!isprint(data) && data != '\r')
+//         return;
+//     buffer[buffer_size++] = data;
+//     putch(data);
+// }
 
-int GetString(char *str)
-{
-    if (buffer[buffer_size - 1] == '\r')
-    {
-        buffer[--buffer_size] = '\0';
-        strcpy(str, buffer);
-        ClearBuffer();
-        return 1;
-    }
-    else
-    {
-        str[0] = '\0';
-        return 0;
-    }
-}
+// int GetString(char *str)
+// {
+//     if (buffer[buffer_size - 1] == '\r')
+//     {
+//         buffer[--buffer_size] = '\0';
+//         strcpy(str, buffer);
+//         ClearBuffer();
+//         return 1;
+//     }
+//     else
+//     {
+//         str[0] = '\0';
+//         return 0;
+//     }
+// }
 void __interrupt(high_priority) Hi_ISR(void)
 {
 
@@ -177,7 +177,7 @@ void keyboard_input(char *str)
 {
     for (int i = 0; i < strlen(str); i++)
         str[i] = toupper(str[i]);
-    printf("BT CMD: %s\n", str);
+    // printf("BT CMD: %s\n", str);
 
     // __delay_ms(30);
 
@@ -222,7 +222,7 @@ void keyboard_input(char *str)
     }
     else if (strcmp(str, "PLAY_MUSIC") == 0)
     {
-        // printf("Play music\n");
+//        printf("Play music\n");
         DF_PlayTrack1(); // Play track 1
     }
     else if (strcmp(str, "STOP_MUSIC") == 0)
@@ -250,41 +250,28 @@ void main(void)
     OSCCONbits.IRCF = 0b110; // 4 MHz
     ADCON1 = 0x0F;
     CCP_Seg7_Initialize();
-    // SPI_Init();
-    // MFRC522_Init();
-    // Initialize_UART();
-
-    TRISCbits.TRISC6 = 0; // TX as output
-    TRISCbits.TRISC7 = 1; // RX as input
-    LATCbits.LATC6 = 0;   // Idle state high
-    LATCbits.LATC7 = 0;   // Idle state high
-
-    // Baud rate ~9600 @ 4MHz using 16-bit BRG
-    TXSTAbits.SYNC = 0;    // Asynchronous
-    BAUDCONbits.BRG16 = 0; // 8-bit Baud Rate Generator
-    TXSTAbits.BRGH = 1;    // High speed
-    // SPBRGH = 0;
-    SPBRG = 25; // 4MHz -> 9600 bps
-
-    // Serial enable
-    RCSTAbits.SPEN = 1; // Enable async serial port
-    PIR1bits.TXIF = 0;  // Clear TX flag
-    PIR1bits.RCIF = 0;  // Clear RX flag
-    TXSTAbits.TXEN = 1; // Enable transmission
-    RCSTAbits.CREN = 1; // Enable continuous receive
-    PIE1bits.TXIE = 0;  // Disable TX interrupt
-    IPR1bits.TXIP = 0;  // TX interrupt priority
-    PIE1bits.RCIE = 1;  // Enable RX interrupt
-    IPR1bits.RCIP = 0;  // RX interrupt priority (low)
-    // DF_Init();
-    seg7_setBrightness(7);
-    seg7_display4(gear[0][0], gear[0][1], gear[0][2], gear[0][3]);
-    __delay_ms(500);
+    Initialize_UART();
+    DF_Init();
+    SPI_Init();
+//    seg7_setBrightness(7);
+//    seg7_display4(gear[0][0], gear[0][1], gear[0][2], gear[0][3]);
+    
     unsigned char uid[7], uidLen;
     unsigned char status;
+    char input_str[STR_MAX];
 
+    //printf("System Initialzed\r\n");
+    
+    if(!PN532_Init()) {
+        while(1);
+    }
+    __delay_ms(2000);
+    
+    //DF_PlayTrack1(); // Play track 1
     while (1)
     {
+        if (GetString(input_str))
+            keyboard_input(input_str);
         // __delay_ms(100);
         // CCP
         CCPR1L = speed;
@@ -292,21 +279,21 @@ void main(void)
         CCPR2L = speed;
         CCP2CONbits.DC2B = 0;
 
-        if(PN532_ReadUID(uid, &uidLen)) {
-            
-            
-            // 【修改這裡】
-            // 你的卡片是 7 bytes (或 8 bytes)，所以不能檢查 == 4
-            // 直接比對前幾個獨特的號碼即可 (04 B3 31 4E)
-            if(uid[1]==0xB3 && uid[2]==0x31 && uid[3]==0x4E) {
-                //printf("Match! Play Music.\r\n");
+        if (PN532_ReadUID(uid, &uidLen))
+        {
+
+            //printf("UID");
+            if (uid[1] == 0xB3 && uid[2] == 0x31 && uid[3] == 0x4E)
+            {
+                // printf("Match! Play Music.\r\n");
                 DF_PlayTrack1();
             }
-            
+
             __delay_ms(1000); // 讀到卡後暫停一秒
-        } else {
+        }
+        else
+        {
             __delay_ms(50); // 沒讀到卡稍微休息
         }
-        
     }
 }

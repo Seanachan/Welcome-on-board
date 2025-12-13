@@ -68,7 +68,7 @@ void Initialize_UART(void)
 
   // Baud rate ~9600 @ 4MHz using 16-bit BRG
   TXSTAbits.SYNC = 0;    // Asynchronous
-  BAUDCONbits.BRG16 = 0; // 16-bit Baud Rate Generator
+  BAUDCONbits.BRG16 = 0; // 8-bit Baud Rate Generator
   TXSTAbits.BRGH = 1;    // High speed
   // SPBRGH = 0;
   SPBRG = 25; // 4MHz -> 9600 bps
