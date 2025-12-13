@@ -66,6 +66,8 @@
 #include "motor.h"
 #include "SPI.h"
 #include "seg7/seg7.h"
+#include "US/US.h"
+#include "light.h"
 
 // Definitions
 #define _XTAL_FREQ 4000000
@@ -130,30 +132,45 @@ int sum_cnt = 0;
 //         return 0;
 //     }
 // }
+
+const int light_val = 550;
+
 void __interrupt(high_priority) Hi_ISR(void)
 {
-
-    if (PIR1bits.ADIF)
-    {
-        long long value = (ADRESH << 8) | ADRESL;
-        // do sth
-        adc_sum += value;
-        sum_cnt++;
-        if (sum_cnt >= 20)
-        {
-            long long average_value = adc_sum / 20;
-            seg7_displayNumber(average_value);
-            // __delay_ms(500);
-            adc_sum = 0;
-            sum_cnt = 0;
+    
+    // INT0: ECHO signal (US)
+    if(INTCONbits.INT0IF) {
+        if(measuring) {
+            if(INTCON2bits.INTEDG0) {  // Rising edge
+                start_time = TMR1;
+                tmr_ticks = 0;          // reset overflow count
+                INTCON2bits.INTEDG0 = 0; // next: falling edge
+            } else {                     // Falling edge
+                end_time = TMR1;
+                // compute total ticks including overflow
+                long long total_ticks;
+                if(end_time >= start_time) {
+                    total_ticks = (tmr_ticks + end_time) - start_time;
+                } else {
+                    // Timer1 rolled over between rising and falling edge
+                    total_ticks = (tmr_ticks + 65536 + end_time) - start_time;
+                }
+                distance = total_ticks / 56;   // convert to cm
+                if(distance > 400) distance = 400; // limit max distance
+                if(distance < 2) distance = 2;     // limit min distance
+                measuring = 0;
+                INTCON2bits.INTEDG0 = 1;          // next: rising edge
+            }
         }
-
-        PIR1bits.ADIF = 0; // clear flag bit
-
-        // step5 & go back step3
-        // __delay_ms(3); // delay at least 2tad (4M ver.)
-        ADCON0bits.GO = 1;
+        INTCONbits.INT0IF = 0; // clear INT0 flag
     }
+
+    // Timer1 overflow
+    if(PIR1bits.TMR1IF) {
+        tmr_ticks += 65536;      // accumulate overflow ticks
+        PIR1bits.TMR1IF = 0;     // clear Timer1 interrupt flag
+    }
+    
 
     return;
 }
@@ -170,7 +187,31 @@ void __interrupt(low_priority) Lo_ISR(void)
 
         MyusartRead();
     }
+    
     return;
+}
+
+void check_light(){
+    long long value = (ADRESH << 8) | ADRESL;
+    //do sth
+    adc_sum += value;
+    sum_cnt++;
+    int max_cnt = 1;
+    if(sum_cnt >= max_cnt){
+        long long average_value = adc_sum / max_cnt;
+        if(average_value > light_val){
+            light_start();
+        }else{
+            light_stop();
+        }
+        //seg7_displayNumber(average_value);
+        adc_sum = 0;
+        sum_cnt = 0;
+    }
+
+    // step5 & go back step3
+    __delay_ms(3);  // delay at least 2tad (4M ver.)
+    ADCON0bits.GO = 1;
 }
 
 void keyboard_input(char *str)
@@ -248,11 +289,14 @@ void keyboard_input(char *str)
 void main(void)
 {
     OSCCONbits.IRCF = 0b110; // 4 MHz
-    ADCON1 = 0x0F;
+    ADCON1 = 0x0E;
     CCP_Seg7_Initialize();
     Initialize_UART();
     DF_Init();
     SPI_Init();
+    US_Init();
+    ADC_Initialize();
+    light_init();
 //    seg7_setBrightness(7);
 //    seg7_display4(gear[0][0], gear[0][1], gear[0][2], gear[0][3]);
     
@@ -260,7 +304,7 @@ void main(void)
     unsigned char status;
     char input_str[STR_MAX];
 
-    //printf("System Initialzed\r\n");
+    printf("System Initialzed\r\n");
     
     if(!PN532_Init()) {
         while(1);
@@ -270,6 +314,7 @@ void main(void)
     //DF_PlayTrack1(); // Play track 1
     while (1)
     {
+        
         if (GetString(input_str))
             keyboard_input(input_str);
         // __delay_ms(100);
@@ -278,22 +323,29 @@ void main(void)
         CCP1CONbits.DC1B = 0;
         CCPR2L = speed;
         CCP2CONbits.DC2B = 0;
-
+        
         if (PN532_ReadUID(uid, &uidLen))
         {
 
-            //printf("UID");
+            printf("UID");
             if (uid[1] == 0xB3 && uid[2] == 0x31 && uid[3] == 0x4E)
             {
-                // printf("Match! Play Music.\r\n");
+                //printf("Match! Play Music.\r\n");
                 DF_PlayTrack1();
             }
 
-            __delay_ms(1000); // 讀到卡後暫停一秒
+            __delay_ms(1000); 
         }
         else
         {
-            __delay_ms(50); // 沒讀到卡稍微休息
+            __delay_ms(50); 
         }
+        
+        check_light();
+        // US
+        US_Trigger();
+        __delay_ms(60);
+        uint16_t d = US_GetDistance();
+        seg7_displayNumber(d);
     }
 }
