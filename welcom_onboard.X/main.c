@@ -171,7 +171,7 @@ void check_light()
         {
             light_stop();
         }
-        // seg7_displayNumber(average_value);
+         seg7_displayNumber(average_value);
         adc_sum = 0;
         sum_cnt = 0;
     }
@@ -295,7 +295,7 @@ void main(void)
         if (PN532_ReadUID(uid, &uidLen))
         {
 
-            printf("UID");
+//            printf("UID");
             if (uid[1] == 0xB3 && uid[2] == 0x31 && uid[3] == 0x4E)
             {
                 // printf("Match! Play Music.\r\n");
@@ -314,6 +314,6 @@ void main(void)
         US_Trigger();
         __delay_ms(10);
         uint16_t d = US_GetDistance();
-        seg7_displayNumber(d);
+//        seg7_displayNumber(d);
     }
 }
