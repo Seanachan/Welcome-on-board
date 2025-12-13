@@ -117,7 +117,7 @@ void MyusartRead()
 
 int GetString(char *str)
 {
-  if (buffer[buffer_size - 1] == '\r')
+    if (buffer[buffer_size - 1] == '\r')
     {
         buffer[--buffer_size] = '\0';
         strcpy(str, buffer);
@@ -183,13 +183,18 @@ void keyboard_input(char *str)
 
     if (strcmp(str, "FORWARD") == 0)
     {
-        // move robot forward
+        // move car forward
         forward();
     }
     else if (strcmp(str, "REVERSE") == 0)
     {
-        // move robot backward
+        // move car backward
         backward();
+    }
+    else if (strcmp(str, "PARK") == 0)
+    {
+        // park the car
+        park();
     }
     else if (strcmp(str, "STRAIGHT") == 0)
     {
@@ -248,8 +253,7 @@ void main(void)
     // SPI_Init();
     // MFRC522_Init();
     // Initialize_UART();
-    TRISC = 0;
-    LATC = 0;
+
     TRISCbits.TRISC6 = 0; // TX as output
     TRISCbits.TRISC7 = 1; // RX as input
     LATCbits.LATC6 = 0;   // Idle state high
