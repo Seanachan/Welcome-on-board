@@ -6,10 +6,11 @@
 #include <xc.h>
 #include "seg7/seg7.h"
 #include "motor.h"
+int speed = 0;
 void CCP_Seg7_Initialize(void)
 {
     // general
-    ADCON1 = 0x0E; // set as digital -> reset flag bit DO FIRST!!
+    ADCON1 = 0x0F; // all digital so seg7 on RA0/RA1 works
 
     // LED
     TRISD = 0; // 0:output 1:input
@@ -24,11 +25,11 @@ void CCP_Seg7_Initialize(void)
     CCP_Initialize();
     seg7_init();
     seg7_setBrightness(7);
-    ADC_Initialize();
 }
 void CCP_Initialize()
 {
-    TRISCbits.TRISC2 = 0;
+    TRISCbits.TRISC2 = 0; // CCP1 (RC2) PWM output
+    TRISCbits.TRISC1 = 0; // CCP2 (RC1) PWM output
 
     CCP1CONbits.CCP1M = 0b1100;
     CCP2CONbits.CCP2M = 0b1100;
@@ -37,8 +38,8 @@ void CCP_Initialize()
     PR2 = 49;
     T2CONbits.TMR2ON = 0b1;
 
-    TRISC = 0;
-    LATC = 0;
+    // Only touch the PWM pin; leave RC6/RC7 for UART
+    LATCbits.LATC2 = 0;
 }
 
 void INTERRUPT_Initialize(void)
