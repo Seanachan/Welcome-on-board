@@ -84,7 +84,6 @@ int sum_cnt = 0;
 
 const int light_val = 550;
 
-
 void check_light()
 {
     if (ADCON0bits.GO)
@@ -106,7 +105,7 @@ void check_light()
         {
             light_stop();
         }
-         seg7_displayNumber(average_value);
+        // seg7_displayNumber(average_value);
         adc_sum = 0;
         sum_cnt = 0;
     }
@@ -116,12 +115,15 @@ void check_light()
     ADCON0bits.GO = 1;
 }
 
-void check_front(){
+void check_front()
+{
     const int min_dis = 50;
     US_Trigger();
     __delay_ms(10);
     uint16_t d = US_GetDistance();
-    if(d <= min_dis){
+//    seg7_displayNumber(d);
+    if (d <= min_dis)
+    {
         park();
     }
 }
@@ -188,12 +190,13 @@ void __interrupt(low_priority) Lo_ISR(void)
 
         MyusartRead();
     }
-    
-    if(INTCONbits.TMR0IF){
+
+    if (INTCONbits.TMR0IF)
+    {
         INTCONbits.TMR0IF = 0;
         TMR0H = 0xE7;
         TMR0L = 0xF6;
-        
+
         check_light();
         check_front();
     }
@@ -275,17 +278,17 @@ void TMR0_Init(void)
 {
     // Timer0 config
     T0CONbits.T08BIT = 0;   // 16-bit mode
-    T0CONbits.T0CS   = 0;   // Internal clock (Fosc/4)
-    T0CONbits.PSA    = 0;   // Enable prescaler
-    T0CONbits.T0PS   = 0b100; // Prescaler 1:32
+    T0CONbits.T0CS = 0;     // Internal clock (Fosc/4)
+    T0CONbits.PSA = 0;      // Enable prescaler
+    T0CONbits.T0PS = 0b100; // Prescaler 1:32
 
     // Load preload value for 200ms
     TMR0H = 0xE7;
     TMR0L = 0xF6;
 
     // Interrupt settings
-    INTCONbits.TMR0IF = 0;   // Clear flag
-    INTCONbits.TMR0IE = 1;   // Enable Timer0 interrupt
+    INTCONbits.TMR0IF = 0; // Clear flag
+    INTCONbits.TMR0IE = 1; // Enable Timer0 interrupt
     // Set Timer0 as LOW priority
     INTCON2bits.TMR0IP = 0;
 
@@ -305,6 +308,7 @@ void main(void)
     ADC_Initialize();
     light_init();
     OLED_Init();
+    TMR0_Init();
     //    seg7_setBrightness(7);
     //    seg7_display4(gear[0][0], gear[0][1], gear[0][2], gear[0][3]);
 
@@ -335,7 +339,7 @@ void main(void)
         if (PN532_ReadUID(uid, &uidLen))
         {
 
-//            printf("UID");
+            //            printf("UID");
             if (uid[1] == 0xB3 && uid[2] == 0x31 && uid[3] == 0x4E)
             {
                 // printf("Match! Play Music.\r\n");

@@ -8,7 +8,7 @@
 #include "oled/oled.h"
 #include "oled/oled_bitmap.h"
 #include "motor.h"
-int speed = 0;
+extern int speed = 0;
 void CCP_Seg7_Initialize(void)
 {
     // general
