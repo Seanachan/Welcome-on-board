@@ -105,7 +105,9 @@ Once your phone is paired with the HC-05 module via the [Voice Command Hub App](
 
 ## App Interface
 
-<img src='imgs/App_Interface.jpg' height=1140 width=540>
+On Android Devices.
+
+<img src='imgs/App_Interface.jpg' height=600 width=300>
 
 ## Contributors 
 
