@@ -220,7 +220,7 @@ void keyboard_input(char *str)
         // move car backward
         backward();
     }
-    else if (strstr(str, "GO") != NULL){
+    else if (strstr(str, "GO") != NULL){ // go forward
         GOGO();
     }
     else if (strstr(str, "PA") != NULL) // park

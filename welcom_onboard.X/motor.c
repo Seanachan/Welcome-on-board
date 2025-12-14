@@ -8,7 +8,9 @@
 #include "oled/oled.h"
 #include "oled/oled_bitmap.h"
 #include "motor.h"
-extern int speed = 0;
+
+int speed = 0;
+
 void CCP_Seg7_Initialize(void)
 {
     // general
@@ -90,8 +92,8 @@ void forward()
 
 void GOGO()
 {
-    speed = 40;
     forward();
+    lowSpeed();
     seg7_display4(gear[3][0], gear[3][1], gear[3][2], gear[3][3]);
 }
 
