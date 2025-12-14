@@ -208,19 +208,19 @@ void keyboard_input(char *str)
 {
     for (int i = 0; i < strlen(str); i++)
         str[i] = toupper(str[i]);
-    printf(" %s\n", str);
+//    printf(" %s\n", str);
 
-    if (strcmp(str, "FORWARD") == 0)
+    if (strstr(str, "FO") != NULL)  // forward
     {
         // move car forward
         forward();
     }
-    else if (strcmp(str, "REVERSE") == 0)
+    else if (strstr(str, "RE") != NULL) // reverse
     {
         // move car backward
         backward();
     }
-    else if (strcmp(str, "PARK") == 0)
+    else if (strstr(str, "PA") != NULL) // park
     {
         // park the car
         park();
@@ -229,47 +229,48 @@ void keyboard_input(char *str)
     {
         // steering straight
     }
-    else if (strcmp(str, "TURN_LEFT") == 0)
+    else if (strstr(str, "LE") != NULL) // turn left
     {
         // steering left
         turnLeft();
     }
-    else if (strcmp(str, "TURN_RIGHT") == 0)
+    else if (strstr(str, "RI") != NULL) // turn right
     {
         // steering right
         turnRight();
     }
-    else if (strcmp(str, "HIGH_SPEED") == 0)
+    else if (strstr(str, "HI") != NULL) // high speed
     {
         // set high speed
         highSpeed();
     }
-    else if (strcmp(str, "LOW_SPEED") == 0)
+    else if (strstr(str, "LO") != NULL) // low speed
     {
         // set low speed
         lowSpeed();
     }
-    else if (strcmp(str, "PLAY_MUSIC") == 0)
+    else if (strstr(str, "PL") != NULL)    // play_music
     {
         //        printf("Play music\n");
+        seg7_displayNumber(1111);
         DF_PlayTrack1(); // Play track 1
     }
-    else if (strcmp(str, "STOP_MUSIC") == 0)
+    else if (strstr(str, "ST") != NULL)
     {
         // printf("Stop music\n");
         DF_Stop(); // Stop music
     }
-    else if (strcmp(str, "VOL_UP") == 0)
+    else if (strstr(str, "UP") != NULL) // volumn up
     {
         DF_Volume(5);
     }
-    else if (strcmp(str, "VOL_DOWN") == 0)
+    else if (strstr(str, "DO") != NULL) // volumn down
     {
         DF_Volume(-5);
     }
     else
     {
-        printf("Unknown CMD: %s\n", str);
+//        printf("Unknown CMD: %s\n", str);
     }
     // __delay_ms(50);
 }
@@ -316,15 +317,16 @@ void main(void)
     unsigned char status;
     char input_str[STR_MAX];
 
-    printf("System Initialzed\r\n");
+//    printf("System Initialzed\r\n");
 
-    __delay_ms(1000);
+    __delay_ms(2000);
 
-    printf("After 1 seconds\r\n");
+//    printf("After 1 seconds\r\n");
 
+    //DF_PlayTrack1();
     while (!PN532_Init())
         ;
-
+    
     while (1)
     {
 

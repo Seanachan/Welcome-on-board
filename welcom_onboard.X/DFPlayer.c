@@ -20,6 +20,7 @@ void DF_SendCommand(unsigned char cmd, unsigned int param)
     sum += buf[i];
   unsigned int checksum = 0xFFFF - sum + 1;
 
+  __delay_ms(100);
   UART_WriteByte(0x7E); // start
   for (int i = 0; i < 6; i++)
     UART_WriteByte(buf[i]);
