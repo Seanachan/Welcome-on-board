@@ -106,3 +106,22 @@ Once your phone is paired with the HC-05 module via the [Voice Command Hub App](
 ## App Interface
 
 <img src='imgs/App_Interface.jpg' height=1140 width=540>
+
+## Contributors 
+
+[@qinrong1009](https://github.com/qinrong1009)
+
+[@RuQian5757](https://github.com/RuQian5757)
+
+[@tsengrr](https://github.com/tsengrr)
+
+[@zorange1121](https://github.com/zorange1121)
+
+[@Seanachan](https://github.com/Seanachan)
+
+
+## Acknowledgements
+
+- Jun-Hung Ye
+- Xin-Zhen Lin
+
