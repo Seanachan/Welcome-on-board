@@ -121,7 +121,7 @@ void check_front()
     US_Trigger();
     __delay_ms(10);
     uint16_t d = US_GetDistance();
-//    seg7_displayNumber(d);
+    //    seg7_displayNumber(d);
     if (d <= min_dis)
     {
         park();
@@ -208,9 +208,9 @@ void keyboard_input(char *str)
 {
     for (int i = 0; i < strlen(str); i++)
         str[i] = toupper(str[i]);
-//    printf(" %s\n", str);
+    //    printf(" %s\n", str);
 
-    if (strstr(str, "FO") != NULL)  // forward
+    if (strstr(str, "FO") != NULL) // forward
     {
         // move car forward
         forward();
@@ -220,17 +220,20 @@ void keyboard_input(char *str)
         // move car backward
         backward();
     }
-    else if (strstr(str, "GO") != NULL){ // go forward
+    else if (strstr(str, "GO") != NULL)
+    { // go forward
         GOGO();
+        DF_PlayTrack(2); // Play "GO"
     }
     else if (strstr(str, "PA") != NULL) // park
     {
         // park the car
         park();
     }
-    else if (strcmp(str, "STRAIGHT") == 0)
+    else if (strcmp(str, "WH") == 0)
     {
-        // steering straight
+        // What is Love?
+        DF_PlayTrack(4);
     }
     else if (strstr(str, "LE") != NULL) // turn left
     {
@@ -252,11 +255,11 @@ void keyboard_input(char *str)
         // set low speed
         lowSpeed();
     }
-    else if (strstr(str, "PL") != NULL)    // play_music
+    else if (strstr(str, "PL") != NULL) // play_music
     {
         //        printf("Play music\n");
         // seg7_displayNumber(1111);
-        DF_PlayTrack1(); // Play track 1
+        DF_PlayTrack(1); // Play track 1
     }
     else if (strstr(str, "ST") != NULL)
     {
@@ -273,7 +276,7 @@ void keyboard_input(char *str)
     }
     else
     {
-//        printf("Unknown CMD: %s\n", str);
+        //        printf("Unknown CMD: %s\n", str);
     }
     // __delay_ms(50);
 }
@@ -316,22 +319,19 @@ void main(void)
     OLED_Init();
     TMR0_Init();
 
-//    RCONbits.POR = 1;
-//    RCONbits.BOR = 1;
-    
     unsigned char uid[7], uidLen;
     unsigned char status;
     char input_str[STR_MAX];
 
-//    printf("System Initialzed\r\n");
+    //    printf("System Initialzed\r\n");
 
     __delay_ms(2000);
-//    printf("After 1 seconds\r\n");
+    //    printf("After 1 seconds\r\n");
 
-    // DF_PlayTrack1();
+    DF_PlayTrack(3); // Play Totoro
     while (!PN532_Init())
         ;
-    
+
     while (1)
     {
 
@@ -350,11 +350,13 @@ void main(void)
             if (uid[1] == 0xB3 && uid[2] == 0x31 && uid[3] == 0x4E)
             {
                 // printf("Match! Play Music.\r\n");
-                DF_PlayTrack1();
+                DF_PlayTrack(1);
             }
 
             __delay_ms(500);
-        }else{
+        }
+        else
+        {
             __delay_ms(50);
         }
     }

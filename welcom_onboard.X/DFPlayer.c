@@ -36,9 +36,16 @@ void DF_Init(void)
   DF_SendCommand(0x06, 20); // set volume = 20
 }
 
-void DF_PlayTrack1(void)
+void DF_PlayTrack(unsigned int track)
 {
-  DF_SendCommand(0x03, 1); // Play 0001.mp3
+  /*
+  1: On board dance
+  2: GO
+  3: Totoro
+  4: what is love
+  5: queencard
+  */
+  DF_SendCommand(0x03, track); // Play 0001.mp3
 }
 void DF_Stop(void)
 {
