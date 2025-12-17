@@ -255,7 +255,7 @@ void keyboard_input(char *str)
     else if (strstr(str, "PL") != NULL)    // play_music
     {
         //        printf("Play music\n");
-        seg7_displayNumber(1111);
+        // seg7_displayNumber(1111);
         DF_PlayTrack1(); // Play track 1
     }
     else if (strstr(str, "ST") != NULL)
@@ -304,6 +304,8 @@ void main(void)
 {
     OSCCONbits.IRCF = 0b110; // 4 MHz
     ADCON1 = 0x0E;
+
+    __delay_ms(3000);
     CCP_Seg7_Initialize();
     Initialize_UART();
     DF_Init();
@@ -313,9 +315,10 @@ void main(void)
     light_init();
     OLED_Init();
     TMR0_Init();
-    //    seg7_setBrightness(7);
-    //    seg7_display4(gear[0][0], gear[0][1], gear[0][2], gear[0][3]);
 
+//    RCONbits.POR = 1;
+//    RCONbits.BOR = 1;
+    
     unsigned char uid[7], uidLen;
     unsigned char status;
     char input_str[STR_MAX];
@@ -323,10 +326,9 @@ void main(void)
 //    printf("System Initialzed\r\n");
 
     __delay_ms(2000);
-
 //    printf("After 1 seconds\r\n");
 
-    //DF_PlayTrack1();
+    // DF_PlayTrack1();
     while (!PN532_Init())
         ;
     
@@ -351,10 +353,8 @@ void main(void)
                 DF_PlayTrack1();
             }
 
-            __delay_ms(1000);
-        }
-        else
-        {
+            __delay_ms(500);
+        }else{
             __delay_ms(50);
         }
     }

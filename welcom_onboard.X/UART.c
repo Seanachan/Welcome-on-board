@@ -83,4 +83,6 @@ void Initialize_UART(void)
   IPR1bits.TXIP = 0;  // TX interrupt priority
   PIE1bits.RCIE = 1;  // Enable RX interrupt
   IPR1bits.RCIP = 0;  // RX interrupt priority (low)
+  
+  ClearBuffer();
 }
