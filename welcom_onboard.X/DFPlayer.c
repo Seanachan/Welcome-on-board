@@ -33,7 +33,7 @@ void DF_SendCommand(unsigned char cmd, unsigned int param)
 
 void DF_Init(void)
 {
-  DF_SendCommand(0x06, 30); // set volume = 20
+  DF_SendCommand(0x06, 20); // set volume = 20
 }
 
 void DF_PlayTrack1(void)

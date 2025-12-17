@@ -101,11 +101,13 @@ void seg7_displayNumber(int num) {
 
     if(num > 9999) num = 9999;
     if(num < 0) num = 0;
-
-    seg7_writeByte(segCode[num / 1000]);
-    seg7_writeByte(segCode[(num / 100) % 10]);
-    seg7_writeByte(segCode[(num / 10) % 10]);
     seg7_writeByte(segCode[num % 10]);
+    seg7_writeByte(segCode[(num / 10) % 10]);
+    seg7_writeByte(segCode[(num / 100) % 10]);
+    seg7_writeByte(segCode[num / 1000]);
+    
+    
+    
 
     seg7_stop();
 
@@ -121,7 +123,7 @@ void seg7_scroll(const uint8_t *buf, uint8_t len) {
         window[2] = buf[pos+2];
         window[3] = buf[pos+3];
 
-        seg7_display4(window[0], window[1], window[2], window[3]);
+        seg7_display4(window[3], window[2], window[1], window[0]);
         __delay_ms(300);
     }
 }
