@@ -39,13 +39,25 @@ We utilize the following hardware components to ensure precise control and inter
 2. **Motors:** DC Motors
 3. **Power:** 6x AA Batteries
 
+### Outputs
+
+1. 4 $\ohm$ 3W speaker
+
 ## Mobile App Workflow
 
-1. **Voice Activation** - Tapping the mic button initializes the device's native speech recognition engine.
+1. **Voice Activation** - Tapping the mic button activates the device's native speech recognition engine.
 2. **Real-Time Transcription** - The app captures audio input and converts speech to text instantaneously.
 3. **Intent Resolution** - The transcribed text is processed to identify the user's intent.
 4. **LLM Parsing** - The text is sent to gemini-2.0-flash to convert natural language (e.g., "Please turn left now") into a standardized protocol command (e.g., `TURN_LEFT`).
 5. **Bluetooth Transmission** - The resolved command is transmitted via Bluetooth to the HC-05/ESP32 receiver.
+
+## Hardware Functionalities
+
+1. When the car gets too close to obstacles such as walls, it stops the motor instantly.
+2. When surrounding is too dark, ALS senses it and is going to turn the front light on.
+3. When tapping correct RFID card to RC522, it activates DFPlayer and plays music to inform of arrivial, which resembles real buses.
+4. OLED display shows the mood of Totoro Bus.
+5. 7 segment display shows the current gears (parking, moving, etc).
 
 ## Voice Commands
 
@@ -54,6 +66,7 @@ Once your phone is paired with the HC-05 module via the [Voice Command Hub App](
 **Movement:**
 
 - "Go forward" → `FORWARD`
+- "Let's Go" → `GOGO` (setting speed and direction)
 - "Back Up" → `REVERSE`
 - "Parking" → `PARK`
 
@@ -92,4 +105,25 @@ Once your phone is paired with the HC-05 module via the [Voice Command Hub App](
 
 ## App Interface
 
-<img src='imgs/App_Interface.jpg' height=1140 width=540>
+On Android Devices.
+
+<img src='imgs/App_Interface.jpg' height=600 width=300>
+
+## Contributors 
+
+[@qinrong1009](https://github.com/qinrong1009)
+
+[@RuQian5757](https://github.com/RuQian5757)
+
+[@tsengrr](https://github.com/tsengrr)
+
+[@zorange1121](https://github.com/zorange1121)
+
+[@Seanachan](https://github.com/Seanachan)
+
+
+## Acknowledgements
+
+- Jun-Hung Ye
+- Xin-Zhen Lin
+
