@@ -115,6 +115,10 @@ The totoro bus.
 
 <img src='imgs/Car_front.jpeg' height=500 width=300> <img src='imgs/Car_Up.jpeg' height=500 width=300>
 
+## Circuit diagram
+
+<img src='imgs/circuit diagram.png' height=500 width=300> <img src='imgs/Car_Up.jpeg' height=500 width=300>
+
 ## Challenges
 
 ### 1. Power Supply Issue
