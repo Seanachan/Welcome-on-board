@@ -105,28 +105,30 @@ Once your phone is paired with the HC-05 module via the [Voice Command Hub App](
 
 ## App Interface
 
-On Android Devices.
+App On Android Devices.
 
-<img  src='imgs/App_Interface.jpg' height=600 width=300> <img align='right' src='imgs/App_Interface.jpg' height=600 width=300>
+<img src='imgs/App_Interface.jpg' height=500 width=250>
 
----
+## Work Result
 
-## Contributors 
+The totoro bus.
 
-[@qinrong1009](https://github.com/qinrong1009)
+<img src='imgs/Car_front.jpeg' height=500 width=300> <img src='imgs/Car_Up.jpeg' height=500 width=300>
+
+## Contributors
+
+[@Seanachan](https://github.com/Seanachan)
 
 [@RuQian5757](https://github.com/RuQian5757)
+
+[@qinrong1009](https://github.com/qinrong1009)
 
 [@tsengrr](https://github.com/tsengrr)
 
 [@zorange1121](https://github.com/zorange1121)
 
-[@Seanachan](https://github.com/Seanachan)
-
-
 ## Acknowledgements
 
-- Jun-Hung Ye
-- Xin-Zhen Lin
-- Papa Zhou
-
+- Jun-Hung Ye: Providing both techinical supports and equipment supply.
+- Xin-Zhen Lin: Help tuning the devices, and support final result demo.
+- Papa Chou: Providing wiring advices.
