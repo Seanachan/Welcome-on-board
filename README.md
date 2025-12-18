@@ -37,7 +37,7 @@ We utilize the following hardware components to ensure precise control and inter
 
 1. **Drive:** L298N Motor Driver
 2. **Motors:** DC Motors
-3. **Power:** 6x AA Batteries
+3. **Power:** 12x AA Batteries
 
 ### Outputs
 
@@ -115,17 +115,74 @@ The totoro bus.
 
 <img src='imgs/Car_front.jpeg' height=500 width=300> <img src='imgs/Car_Up.jpeg' height=500 width=300>
 
+## Challenges
+
+### 1. Power Supply Issue
+
+> Our project has many modules attached, which requries large power source.
+> We initially distribute the power from motor to all of the modules, but found it disabled all other modules.
+
+#### Observation
+
+We measured the voltage by multimeter, and found out that voltage wasn't as high as expected.
+
+#### Solution
+
+1. Split voltage source from 1 to 3. Motor, DFPlayer, and all other sensors/modules.
+2. Apply a voltage booster, making sure supplying 5V/4.5V.
+
+### 2. UART Conflicts
+
+> Since there are only 1 set of TX/RX for PIC18F4520, we struggled to minimize the conflicts of sending/receiving commands via bluetooth, which transfers command to PIC processors.
+
+#### Solution
+
+1. Remove TX from DFPlayer, since it only requires receiving commands.
+2. Remove RX from HC-05, since it only sends commands to other modules.
+
+### 3. Debug Mode worked, but load to chip didn't
+
+> During the final stage, we tested many times about or code, and it was quite stable.
+> However, by the time we load our code onto chip, we didn't find it work as expected, the blueooth transmisison part (UART) had some issues.
+>
+> It sometimes worked, but sometimes didn't. We didn't change any of the code.
+
+#### Solutions
+
+We apply 乖乖, which served as a spiritual support. We loaded and unloaded the code for many times, and finally had a workable version for us to demonstrate our code.
+
 ## Contributors
 
 [@Seanachan](https://github.com/Seanachan)
 
+- Voice Command App
+- DFPlayer Config
+- Bluetooth Transmission
+
 [@RuQian5757](https://github.com/RuQian5757)
+
+- Ultrasonic
+- OLED Display
+- 7-segment display
 
 [@qinrong1009](https://github.com/qinrong1009)
 
-[@tsengrr](https://github.com/tsengrr)
+- Motor Config
+- Power Config
+- Car Design
+- Exterior Design
 
 [@zorange1121](https://github.com/zorange1121)
+
+- Motor Config
+- Power Config
+- Car Design
+- Exterior Design
+
+[@tsengrr](https://github.com/tsengrr)
+
+- RFID Integration
+- DFPlayer Config
 
 ## Acknowledgements
 
