@@ -107,7 +107,9 @@ Once your phone is paired with the HC-05 module via the [Voice Command Hub App](
 
 On Android Devices.
 
-<img src='imgs/App_Interface.jpg' height=600 width=300>
+<img  src='imgs/App_Interface.jpg' height=600 width=300> <img align='right' src='imgs/App_Interface.jpg' height=600 width=300>
+
+---
 
 ## Contributors 
 
@@ -126,4 +128,5 @@ On Android Devices.
 
 - Jun-Hung Ye
 - Xin-Zhen Lin
+- Papa Zhou
 
