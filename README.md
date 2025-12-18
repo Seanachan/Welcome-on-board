@@ -24,7 +24,7 @@ We utilize the following hardware components to ensure precise control and inter
 
 ### Sensors & Input
 
-1. **Identification:** RFID Sensor Module (RC522)
+1. **Identification:** RFID Sensor Module (PN532)
 2. **Environment:** Ambient Light Sensor (ALS) Module
 3. **Navigation:** Ultrasonic
 
@@ -55,7 +55,7 @@ We utilize the following hardware components to ensure precise control and inter
 
 1. When the car gets too close to obstacles such as walls, it stops the motor instantly.
 2. When surrounding is too dark, ALS senses it and is going to turn the front light on.
-3. When tapping correct RFID card to RC522, it activates DFPlayer and plays music to inform of arrivial, which resembles real buses.
+3. When tapping correct RFID card to PN532, it activates DFPlayer and plays music to inform of arrivial, which resembles real buses.
 4. OLED display shows the mood of Totoro Bus.
 5. 7 segment display shows the current gears (parking, moving, etc).
 
