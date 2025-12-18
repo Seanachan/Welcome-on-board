@@ -119,6 +119,11 @@ The totoro bus.
 
 <img src='imgs/circuit diagram.png' height=500 width=300> <img src='imgs/Car_Up.jpeg' height=500 width=300>
 
+## Operating environment and target users
+- Operating environment: the floor that does not have any obstacles
+- specialize for  [@zorange1121](https://github.com/zorange1121) and for [@RuQian5757](https://github.com/RuQian5757) that can show his exclusive dance performance
+
+
 ## Challenges
 
 ### 1. Power Supply Issue
