@@ -117,7 +117,7 @@ The totoro bus.
 
 ## Circuit diagram
 
-<img src='imgs/circuit diagram.png' height=500 width=300> <img src='imgs/Car_Up.jpeg' height=500 width=300>
+<img src='imgs/circuit diagram.png' height=500 width=300> 
 
 ## Operating environment and target users
 - Operating environment: the floor that does not have any obstacles
