@@ -197,7 +197,7 @@ We apply 乖乖, which served as a spiritual support. We loaded and unloaded the
 - Car Design
 - Exterior Design
 
-[曾欣瑜 @tsengrr](https://github.com/tsengrr)
+[曾歆瑜 @tsengrr](https://github.com/tsengrr)
 
 - RFID Integration
 - DFPlayer Config
