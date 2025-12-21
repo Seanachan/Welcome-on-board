@@ -190,7 +190,7 @@ We apply 乖乖, which served as a spiritual support. We loaded and unloaded the
 - Car Design
 - Exterior Design
 
-[周雨橙 @zorange1121](https://github.com/zorange1121)
+[周雨澄 @zorange1121](https://github.com/zorange1121)
 
 - Motor Config
 - Power Config
