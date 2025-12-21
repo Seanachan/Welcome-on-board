@@ -127,6 +127,12 @@ The totoro bus.
 - Operating environment: the floor that does not have any obstacles
 - specialize for [@zorange1121](https://github.com/zorange1121) and for [@RuQian5757](https://github.com/RuQian5757) that can show his exclusive dance performance
 
+## Demonstration
+
+[![Watch the video](https://img.youtube.com/vi/dalMES1V9UI/maxresdefault.jpg)](https://youtu.be/dalMES1V9UI)
+
+### [Watch demonstration video on YouTube](https://youtu.be/dalMES1V9UI)
+
 ## Challenges
 
 ### 1. Power Supply Issue
@@ -165,33 +171,33 @@ We apply 乖乖, which served as a spiritual support. We loaded and unloaded the
 
 ## Contributors
 
-[@Seanachan](https://github.com/Seanachan)
+[白昕宸 @Seanachan](https://github.com/Seanachan)
 
 - Voice Command App
 - DFPlayer Config
 - Bluetooth Transmission
 
-[@RuQian5757](https://github.com/RuQian5757)
+[涂睿倫 @RuQian5757](https://github.com/RuQian5757)
 
 - Ultrasonic
 - OLED Display
 - 7-segment display
 
-[@qinrong1009](https://github.com/qinrong1009)
+[葉沁蓉@qinrong1009](https://github.com/qinrong1009)
 
 - Motor Config
 - Power Config
 - Car Design
 - Exterior Design
 
-[@zorange1121](https://github.com/zorange1121)
+[周雨橙 @zorange1121](https://github.com/zorange1121)
 
 - Motor Config
 - Power Config
 - Car Design
 - Exterior Design
 
-[@tsengrr](https://github.com/tsengrr)
+[曾欣瑜 @tsengrr](https://github.com/tsengrr)
 
 - RFID Integration
 - DFPlayer Config
