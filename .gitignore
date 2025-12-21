@@ -27,3 +27,4 @@ Makefile
 /welcom_onboard.X/build/
 /welcom_onboard.X/dist/
 /test.X/dist/
+.DS_Store

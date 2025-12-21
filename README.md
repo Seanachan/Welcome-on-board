@@ -1,5 +1,7 @@
 # Welcome-on-board
 
+## About
+
 We are implementing an autonomous smart car system using the **PIC XC8** compiler.
 
 The system is integrated with an **HC-05 Bluetooth module**, serving as a bi-directional bridge between our custom Android application and the target **PIC18F4520** microcontroller (via UART).
@@ -9,6 +11,10 @@ The system is integrated with an **HC-05 Bluetooth module**, serving as a bi-dir
 > _My Neighbor Totoro_ is a beloved Japanese animation deeply rooted in our hearts.
 >
 > Inspired by Totoro's warm-hearted nature, we designed this system to bring joy to its interactions. When passengers tap their card on the **RFID sensor**, the car plays the "On-Board Dance" theme song while the integrated light stick glows in synchronization. This feature aims to create a shared moment of cheer, reflecting our belief that technology should positively impact human connection and foster a brighter future.
+
+## System Overview
+
+<img src='imgs/System_Architecture.png' align='center' alt='system architecture'> <img src='imgs/System_Flowchart.png' align='center' alt='system flowchart'>
 
 ## Automated Car Components
 
@@ -94,9 +100,6 @@ Once your phone is paired with the HC-05 module via the [Voice Command Hub App](
 - "Volume Up" → `VOL_UP`
 - "Volume Down" → `VOL_DOWN`
 
-**Other:**
-
-- "Honk" → `HONK`
 
 ## IU-IKE Light Stick Integration
 
@@ -117,12 +120,12 @@ The totoro bus.
 
 ## Circuit diagram
 
-<img src='imgs/circuit diagram.png' height=500 width=300> 
+<img src='imgs/circuit diagram.png' height=350 width=500>
 
 ## Operating environment and target users
-- Operating environment: the floor that does not have any obstacles
-- specialize for  [@zorange1121](https://github.com/zorange1121) and for [@RuQian5757](https://github.com/RuQian5757) that can show his exclusive dance performance
 
+- Operating environment: the floor that does not have any obstacles
+- specialize for [@zorange1121](https://github.com/zorange1121) and for [@RuQian5757](https://github.com/RuQian5757) that can show his exclusive dance performance
 
 ## Challenges
 
