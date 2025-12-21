@@ -29,3 +29,4 @@ Makefile
 /test.X/dist/
 .DS_Store
 arduino/
+*.py
