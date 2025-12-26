@@ -25,8 +25,7 @@ We utilize the following hardware components to ensure precise control and inter
 1. **MCU:** Microchip PIC18F4520
 2. **Programmer:** MPLAB PICkit 4
 3. **Audio:** DFPlayer Mini (MP3 Player Module)
-
-### Sensors
+4. **Bluetooth:** HC-05 Bluetooth Module
 
 ### Sensors & Input
 
@@ -55,7 +54,7 @@ We utilize the following hardware components to ensure precise control and inter
 2. **Real-Time Transcription** - The app captures audio input and converts speech to text instantaneously.
 3. **Intent Resolution** - The transcribed text is processed to identify the user's intent.
 4. **LLM Parsing** - The text is sent to gemini-2.0-flash to convert natural language (e.g., "Please turn left now") into a standardized protocol command (e.g., `TURN_LEFT`).
-5. **Bluetooth Transmission** - The resolved command is transmitted via Bluetooth to the HC-05/ESP32 receiver.
+5. **Bluetooth Transmission** - The resolved command is transmitted via Bluetooth to the HC-05 receiver.
 
 ## Hardware Functionalities
 
